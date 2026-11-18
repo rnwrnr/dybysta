@@ -1,11 +1,12 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUp, Loader2, RotateCcw, Sparkles, WandSparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { SimulatedBadge } from "@/components/items/meta";
+import { KIND_META, SimulatedBadge } from "@/components/items/meta";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { localNow } from "@/lib/ai/context";
 import { fromDateKey } from "@/lib/dates";
@@ -31,6 +32,7 @@ export function CaptureComposer({ autoFocus, compact, onComplete }: { autoFocus?
   const data = useData();
   const router = useRouter();
   const { preferences, categories } = data;
+  const { t, lang: uiLang } = useT();
   const lang: VoiceLanguage = preferences.voice_language ?? "en-US";
   const [text, setText] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -80,15 +82,15 @@ export function CaptureComposer({ autoFocus, compact, onComplete }: { autoFocus?
       const res = await fetch("/api/ai/capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: input, now: localNow(now), weekday: now.toLocaleDateString("en-US", { weekday: "long" }), categories: categories.map((c) => c.name) }),
+        body: JSON.stringify({ text: input, now: localNow(now), weekday: now.toLocaleDateString("en-US", { weekday: "long" }), categories: categories.map((c) => c.name), language: uiLang }),
       });
       const json = (await res.json()) as CaptureResponse;
-      if (!res.ok) throw new Error(json.error ?? "The AI couldn't process that.");
-      if (!json.items.length) throw new Error("I couldn't find anything to save in that. Try rephrasing.");
+      if (!res.ok) throw new Error(json.error ?? t("The AI couldn't process that."));
+      if (!json.items.length) throw new Error(t("I couldn't find anything to save in that. Try rephrasing."));
       setDrafts(json.items.map(toDraft));
       setMeta({ simulated: json.simulated, error: json.error, model: json.model });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+      toast.error(e instanceof Error ? e.message : t("Something went wrong. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -127,9 +129,9 @@ export function CaptureComposer({ autoFocus, compact, onComplete }: { autoFocus?
     }
     setSavingKey(null);
     if (ok) {
-      toast.success(`${d.kind[0].toUpperCase() + d.kind.slice(1)} saved`, {
+      toast.success(t("{kind} saved", { kind: t(KIND_META[d.kind].label) }), {
         description: d.title,
-        action: { label: "View", onClick: () => router.push(ROUTE_FOR[d.kind]) },
+        action: { label: t("View"), onClick: () => router.push(ROUTE_FOR[d.kind]) },
       });
       const next = drafts.filter((x) => x.key !== d.key);
       setDrafts(next);
@@ -152,13 +154,13 @@ export function CaptureComposer({ autoFocus, compact, onComplete }: { autoFocus?
           <div className="flex min-w-0 items-center gap-2">
             <WandSparkles className="size-4 shrink-0 text-primary" />
             <p className="truncate text-[13px] text-muted-foreground">
-              From: <span className="text-foreground">&ldquo;{text.trim()}&rdquo;</span>
+              {t("From:")} <span className="text-foreground">&ldquo;{text.trim()}&rdquo;</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
             {meta?.simulated && <SimulatedBadge />}
             <Button variant="ghost" size="xs" onClick={() => setDrafts([])}>
-              <RotateCcw /> Edit text
+              <RotateCcw /> {t("Edit text")}
             </Button>
           </div>
         </div>
@@ -198,25 +200,25 @@ export function CaptureComposer({ autoFocus, compact, onComplete }: { autoFocus?
           }}
           rows={compact ? 3 : 3}
           maxLength={2000}
-          placeholder={lang === "ru-RU" ? "Напишите или скажите что угодно — задачу, идею, напоминание…" : "Type or say anything — a task, an idea, a reminder…"}
-          aria-label="Quick capture"
+          placeholder={t("Type or say anything — a task, an idea, a reminder…")}
+          aria-label={t("Quick capture")}
           className="block w-full resize-none bg-transparent px-4 pt-4 pb-1 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground/60"
         />
         {speech.listening && (
           <div className="flex items-center gap-2 px-4 pb-1 text-[13px] text-muted-foreground" aria-live="polite">
             <ListeningBars />
-            <span className="truncate italic">{speech.interim || (lang === "ru-RU" ? "Слушаю…" : "Listening…")}</span>
+            <span className="truncate italic">{speech.interim || t("Listening…")}</span>
           </div>
         )}
         <div className="flex items-center justify-between gap-2 px-3 pt-1 pb-3">
           <div className="flex items-center gap-2">
             <MicButton listening={speech.listening} supported={speech.supported} onClick={() => (speech.listening ? speech.stop() : speech.start())} />
             <LanguageToggle value={lang} onChange={setLang} />
-            <span className="hidden text-[11px] text-muted-foreground sm:inline">{speech.listening ? "Speak naturally — you can edit the text after" : "Enter to analyze · Shift+Enter for new line"}</span>
+            <span className="hidden text-[11px] text-muted-foreground sm:inline">{speech.listening ? t("Speak naturally — you can edit the text after") : t("Enter to analyze · Shift+Enter for new line")}</span>
           </div>
           <Button onClick={analyze} disabled={!text.trim() || loading} size="sm" className="rounded-lg">
             {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-            {loading ? "Thinking…" : "Organize"}
+            {loading ? t("Thinking…") : t("Organize")}
             {!loading && <ArrowUp className="hidden sm:block" />}
           </Button>
         </div>
@@ -241,7 +243,10 @@ export function CaptureComposer({ autoFocus, compact, onComplete }: { autoFocus?
       {!data.ai.configured && !compact && (
         <p className="text-[11px] text-muted-foreground">
           <Sparkles className="mr-1 inline size-3 text-warning" />
-          Demo AI: no OpenAI key is configured, so a built-in rule-based parser is used. <Link href="/settings#privacy" className="underline underline-offset-2">Learn more</Link>
+          {t("Demo AI: no OpenAI key is configured, so a built-in rule-based parser is used.")}{" "}
+          <Link href="/settings#privacy" className="underline underline-offset-2">
+            {t("Learn more")}
+          </Link>
         </p>
       )}
     </div>

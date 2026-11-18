@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { AlertCircle, Check, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export interface Draft {
   touched: Set<string>;
 }
 
+/** Returns an English message key (translate with t) or null when the draft can be saved. */
 export function missingFor(d: Draft): string | null {
   if (!d.title.trim()) return "Add a title";
   if (d.kind === "reminder" && (!d.date || !d.time)) return "A reminder needs a date and time";
@@ -37,13 +39,14 @@ export function missingFor(d: Draft): string | null {
 }
 
 function AiMark({ show }: { show: boolean }) {
+  const { t } = useT();
   if (!show) return null;
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Sparkles className="size-3 text-primary" aria-label="Filled by AI" />
+        <Sparkles className="size-3 text-primary" aria-label={t("Filled by AI")} />
       </TooltipTrigger>
-      <TooltipContent>Filled in by AI — please check</TooltipContent>
+      <TooltipContent>{t("Filled in by AI — please check")}</TooltipContent>
     </Tooltip>
   );
 }
@@ -70,6 +73,7 @@ export function ReviewCard({
   onDiscard: () => void;
   saving: boolean;
 }) {
+  const { t } = useT();
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => {
     const touched = new Set(draft.touched);
     touched.add(k as string);
@@ -85,9 +89,9 @@ export function ReviewCard({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/40 px-4 py-2.5">
         <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
           <Sparkles className="size-3.5 text-primary" />
-          AI suggests saving this as
+          {t("AI suggests saving this as")}
         </div>
-        <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Item type">
+        <div className="flex flex-wrap gap-1" role="radiogroup" aria-label={t("Item type")}>
           {kinds.map((k) => {
             const M = KIND_META[k];
             const Icon = M.icon;
@@ -105,7 +109,7 @@ export function ReviewCard({
                 )}
               >
                 <Icon className={cn("size-3.5", active && M.tint.split(" ")[0])} />
-                {M.label}
+                {t(M.label)}
                 {active && k === draft.ai.kind && !draft.touched.has("kind") && <span className="text-[10px] text-primary">{Math.round(draft.ai.confidence * 100)}%</span>}
               </button>
             );
@@ -114,20 +118,20 @@ export function ReviewCard({
       </div>
 
       <div className="grid gap-3 p-4">
-        <Field label="Title">
+        <Field label={t("Title")}>
           <Input value={draft.title} onChange={(e) => set("title", e.target.value)} aria-invalid={!draft.title.trim()} className="font-medium" />
         </Field>
 
         {showDate && (
           <div className={cn("grid gap-3", draft.kind === "event" ? "grid-cols-3" : "grid-cols-2")}>
-            <Field label={<L ai={aiFilled("date", !!draft.ai.date)}>{draft.kind === "task" ? "Due date" : "Date"}</L>}>
+            <Field label={<L ai={aiFilled("date", !!draft.ai.date)}>{draft.kind === "task" ? t("Due date") : t("Date")}</L>}>
               <Input type="date" value={draft.date} onChange={(e) => set("date", e.target.value)} aria-invalid={draft.kind !== "task" && !draft.date} />
             </Field>
-            <Field label={<L ai={aiFilled("time", !!draft.ai.time)}>{draft.kind === "event" ? "Starts" : "Time"}</L>}>
+            <Field label={<L ai={aiFilled("time", !!draft.ai.time)}>{draft.kind === "event" ? t("Starts") : t("Time")}</L>}>
               <Input type="time" value={draft.time} onChange={(e) => set("time", e.target.value)} aria-invalid={draft.kind === "reminder" && !draft.time} />
             </Field>
             {draft.kind === "event" && (
-              <Field label="Ends">
+              <Field label={t("Ends")}>
                 <Input type="time" value={draft.end_time} onChange={(e) => set("end_time", e.target.value)} disabled={!draft.time} />
               </Field>
             )}
@@ -137,36 +141,36 @@ export function ReviewCard({
         <div className="grid grid-cols-2 gap-3">
           {draft.kind === "task" && (
             <Field
-              label={<L ai={aiFilled("priority", draft.priorityFromAi)}>Priority</L>}
-              hint={!draft.priorityFromAi && !draft.touched.has("priority") ? "Not mentioned — default" : undefined}
+              label={<L ai={aiFilled("priority", draft.priorityFromAi)}>{t("Priority")}</L>}
+              hint={!draft.priorityFromAi && !draft.touched.has("priority") ? t("Not mentioned — default") : undefined}
             >
               <PrioritySelect value={draft.priority} onChange={(p) => set("priority", p)} size="sm" />
             </Field>
           )}
           {draft.kind === "reminder" && (
-            <Field label="Repeat">
+            <Field label={t("Repeat")}>
               <RepeatSelect value={draft.repeat} onChange={(r) => set("repeat", r)} size="sm" />
             </Field>
           )}
-          <Field label={<L ai={aiFilled("category_id", !!draft.category_id && !!draft.ai.category)}>Category</L>}>
+          <Field label={<L ai={aiFilled("category_id", !!draft.category_id && !!draft.ai.category)}>{t("Category")}</L>}>
             <CategorySelect value={draft.category_id} onChange={(c) => set("category_id", c)} size="sm" />
           </Field>
         </div>
 
         {(draft.kind === "idea" || draft.kind === "note") && (
-          <Field label="Tags">
+          <Field label={t("Tags")}>
             <TagInput value={draft.tags} onChange={(t) => set("tags", t)} />
           </Field>
         )}
 
-        <Field label={draft.kind === "note" ? "Content" : "Details"}>
-          <Textarea value={draft.description} onChange={(e) => set("description", e.target.value)} rows={draft.kind === "note" || draft.kind === "idea" ? 3 : 2} placeholder="Optional" />
+        <Field label={draft.kind === "note" ? t("Content") : t("Details")}>
+          <Textarea value={draft.description} onChange={(e) => set("description", e.target.value)} rows={draft.kind === "note" || draft.kind === "idea" ? 3 : 2} placeholder={t("Optional")} />
         </Field>
 
         {draft.ai.interpretations.length > 0 && (
           <div className="rounded-lg bg-accent/60 px-3 py-2.5">
             <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-accent-foreground uppercase">
-              <Sparkles className="size-3" /> How the AI interpreted this
+              <Sparkles className="size-3" /> {t("How the AI interpreted this")}
             </p>
             <ul className="space-y-0.5 text-[12.5px] text-accent-foreground/90">
               {draft.ai.interpretations.map((i, idx) => (
@@ -178,7 +182,7 @@ export function ReviewCard({
         {draft.ai.clarifications.length > 0 && (
           <div className="rounded-lg border border-warning/30 bg-warning/8 px-3 py-2.5">
             <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-[oklch(0.5_0.13_60)] uppercase">
-              <AlertCircle className="size-3" /> Needs your input
+              <AlertCircle className="size-3" /> {t("Needs your input")}
             </p>
             <ul className="space-y-0.5 text-[12.5px] text-foreground/80">
               {draft.ai.clarifications.map((c, idx) => (
@@ -190,13 +194,13 @@ export function ReviewCard({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3">
-        <p className={cn("text-[12px]", missing ? "text-[oklch(0.5_0.13_60)]" : "text-muted-foreground")}>{missing ?? "Nothing is saved until you approve."}</p>
+        <p className={cn("text-[12px]", missing ? "text-[oklch(0.5_0.13_60)]" : "text-muted-foreground")}>{missing ? t(missing) : t("Nothing is saved until you approve.")}</p>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={onDiscard}>
-            <X /> Discard
+            <X /> {t("Discard")}
           </Button>
           <Button size="sm" onClick={onSave} disabled={!!missing || saving}>
-            <Check /> Save {KIND_META[draft.kind].label.toLowerCase()}
+            <Check /> {t("Save {kind}", { kind: t(KIND_META[draft.kind].label).toLowerCase() })}
           </Button>
         </div>
       </div>

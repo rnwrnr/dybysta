@@ -1,5 +1,17 @@
 import { addDays, addMonths, addWeeks, format, isSameDay, isToday, isTomorrow, isYesterday, startOfDay } from "date-fns";
+import { ru } from "date-fns/locale";
+import { getCurrentLang, t } from "./i18n/core";
 import type { CalendarEvent, Reminder, ReminderRepeat, Task } from "./types";
+
+/** date-fns options for the active UI language. */
+export function dfOpts() {
+  return getCurrentLang() === "ru" ? { locale: ru } : {};
+}
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+/** Locale-aware format; Russian weekday/month names are capitalized at the start. */
+export function fmt(d: Date, pattern: string) {
+  return cap(format(d, pattern, dfOpts()));
+}
 
 /** Local calendar date → "YYYY-MM-DD" */
 export function toDateKey(d: Date): string {
@@ -27,13 +39,14 @@ export function formatTime(time: string | null | undefined): string {
 }
 
 export function relativeDayLabel(d: Date): string {
-  if (isToday(d)) return "Today";
-  if (isTomorrow(d)) return "Tomorrow";
-  if (isYesterday(d)) return "Yesterday";
+  if (isToday(d)) return t("Today");
+  if (isTomorrow(d)) return t("Tomorrow");
+  if (isYesterday(d)) return t("Yesterday");
   const diff = Math.round((startOfDay(d).getTime() - startOfDay(new Date()).getTime()) / 86400000);
-  if (diff > 0 && diff < 7) return format(d, "EEEE");
-  if (d.getFullYear() === new Date().getFullYear()) return format(d, "EEE, MMM d");
-  return format(d, "MMM d, yyyy");
+  const isRu = getCurrentLang() === "ru";
+  if (diff > 0 && diff < 7) return fmt(d, "EEEE");
+  if (d.getFullYear() === new Date().getFullYear()) return fmt(d, isRu ? "EEEEEE, d MMM" : "EEE, MMM d");
+  return fmt(d, isRu ? "d MMM yyyy" : "MMM d, yyyy");
 }
 
 export function formatDue(date: string | null, time: string | null): string {
@@ -110,19 +123,23 @@ export function toLocalInputValue(d: Date): string {
 
 export function greeting(now = new Date()): string {
   const h = now.getHours();
-  if (h < 5) return "Good night";
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 5) return t("Good night");
+  if (h < 12) return t("Good morning");
+  if (h < 18) return t("Good afternoon");
+  return t("Good evening");
 }
 
-export const REPEAT_LABELS: Record<ReminderRepeat, string> = {
+const REPEAT_EN: Record<ReminderRepeat, string> = {
   none: "Does not repeat",
   daily: "Every day",
   weekdays: "Every weekday",
   weekly: "Every week",
   monthly: "Every month",
 };
+export const REPEAT_KEYS = Object.keys(REPEAT_EN) as ReminderRepeat[];
+export function repeatLabel(r: ReminderRepeat) {
+  return t(REPEAT_EN[r]);
+}
 
 export function inQuietHours(start: string, end: string, now = new Date()): boolean {
   const toMin = (t: string) => {

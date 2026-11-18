@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { addDays, addMonths, addWeeks, endOfMonth, endOfWeek, format, isSameMonth, isToday, startOfMonth, startOfWeek, subMonths, subWeeks } from "date-fns";
 import { Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
@@ -7,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDialogs } from "@/components/app/dialogs";
 import { CATEGORY_COLORS } from "@/components/items/meta";
-import { formatTime, fromDateKey, isTaskOverdue, toDateKey } from "@/lib/dates";
+import { fmt, formatTime, fromDateKey, isTaskOverdue, toDateKey } from "@/lib/dates";
 import { useData } from "@/lib/data/store";
 import type { CalendarEvent, Reminder, Task } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const KIND_ICON = { task: CheckCircle2, event: CalendarDays, reminder: Bell };
 export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; categoryId: string | null }) {
   const { tasks, events, reminders, preferences, categoryById } = useData();
   const { open } = useDialogs();
+  const { t, lang } = useT();
   const [mode, setMode] = React.useState<"month" | "week">("month");
   const [cursor, setCursor] = React.useState(() => new Date());
   const weekStartsOn = (preferences.week_starts_on ?? 1) as 0 | 1;
@@ -70,7 +72,12 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
     if (kind === "reminder") open({ type: "reminder", initial: { remind_at: fromDateKey(key, "09:00").toISOString() } });
   };
 
-  const title = mode === "month" ? format(cursor, "MMMM yyyy") : `${format(days[0], "MMM d")} – ${format(days[6], "MMM d, yyyy")}`;
+  const title =
+    mode === "month"
+      ? fmt(cursor, lang === "ru" ? "LLLL yyyy" : "MMMM yyyy")
+      : lang === "ru"
+        ? `${fmt(days[0], "d MMM")} – ${fmt(days[6], "d MMM yyyy")}`
+        : `${format(days[0], "MMM d")} – ${format(days[6], "MMM d, yyyy")}`;
   const prev = () => setCursor((c) => (mode === "month" ? subMonths(c, 1) : subWeeks(c, 1)));
   const next = () => setCursor((c) => (mode === "month" ? addMonths(c, 1) : addWeeks(c, 1)));
 
@@ -101,19 +108,19 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
   const AddMenu = ({ dayKey, className }: { dayKey: string; className?: string }) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className={cn("rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 data-[state=open]:opacity-100", className)} aria-label={`Add item on ${dayKey}`}>
+        <button className={cn("rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 data-[state=open]:opacity-100", className)} aria-label={t("Add item on {day}", { day: dayKey })}>
           <Plus className="size-3.5" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuItem onClick={() => createOn(dayKey, "task")}>
-          <CheckCircle2 /> Task
+          <CheckCircle2 /> {t("Task")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => createOn(dayKey, "event")}>
-          <CalendarDays /> Event
+          <CalendarDays /> {t("Event")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => createOn(dayKey, "reminder")}>
-          <Bell /> Reminder
+          <Bell /> {t("Reminder")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -123,22 +130,22 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
     <div className="overflow-hidden rounded-xl border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={prev} aria-label="Previous">
+          <Button variant="ghost" size="icon-sm" onClick={prev} aria-label={t("Previous")}>
             <ChevronLeft />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={next} aria-label="Next">
+          <Button variant="ghost" size="icon-sm" onClick={next} aria-label={t("Next")}>
             <ChevronRight />
           </Button>
           <h2 className="ml-1 text-[15px] font-semibold tracking-tight">{title}</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="xs" onClick={() => setCursor(new Date())}>
-            Today
+            {t("Today")}
           </Button>
           <Tabs value={mode} onValueChange={(v) => setMode(v as "month" | "week")}>
             <TabsList>
-              <TabsTrigger value="month">Month</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
+              <TabsTrigger value="month">{t("Month")}</TabsTrigger>
+              <TabsTrigger value="week">{t("Week")}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -149,7 +156,7 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
       <div className="grid grid-cols-7 border-b bg-muted/30 text-[11px] font-medium text-muted-foreground">
         {days.slice(0, 7).map((d) => (
           <div key={d.toISOString()} className="px-2 py-1.5">
-            {format(d, "EEE")}
+            {fmt(d, lang === "ru" ? "EEEEEE" : "EEE")}
           </div>
         ))}
       </div>
@@ -182,7 +189,7 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
                   ))}
                   {entries.length > 3 && (
                     <button onClick={() => { setCursor(d); setMode("week"); }} className="px-1.5 text-left text-[10.5px] text-muted-foreground hover:text-foreground">
-                      +{entries.length - 3} more
+                      {t("+{n} more", { n: entries.length - 3 })}
                     </button>
                   )}
                 </div>

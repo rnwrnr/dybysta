@@ -6,7 +6,24 @@
  * states them; every guess is reported in `interpretations`, and missing
  * required details become `clarifications`.
  */
+import { type Lang, translate } from "@/lib/i18n/core";
 import type { CaptureKind, ExtractedItem, Priority, ReminderRepeat } from "@/lib/types";
+
+// Language for user-facing messages. Set at the start of heuristicCapture (synchronous, so no cross-request leakage).
+let LANG: Lang = "en";
+const M = (key: string, vars?: Record<string, string | number>) => translate(LANG, key, vars);
+const KIND_NAMES: Record<CaptureKind, string> = { task: "task", reminder: "reminder", idea: "idea", note: "note", event: "event" };
+const PRIORITY_NAMES: Record<Priority, string> = { urgent: "urgent", high: "high", medium: "medium", low: "low" };
+const RU_WEEKDAYS = ["воскресенье", "понедельник", "вторник", "среду", "четверг", "пятницу", "субботу"];
+const wdName = (wd: { day: number; name: string }) => (LANG === "ru" ? RU_WEEKDAYS[wd.day] : wd.name);
+/** Category names in both languages, so suggestions work whatever the user named them. */
+const CATEGORY_ALIASES: Record<string, string[]> = {
+  Study: ["study", "учёба", "учеба", "университет"],
+  Work: ["work", "работа"],
+  Health: ["health", "здоровье"],
+  Finance: ["finance", "финансы", "деньги"],
+  Personal: ["personal", "личное"],
+};
 
 /** Wall-clock "now" of the user, independent of the server's timezone. */
 export interface LocalNow {
@@ -31,7 +48,7 @@ function weekday(key: string) {
   return parseDay(key).getUTCDay(); // 0 Sun..6 Sat
 }
 function pretty(key: string) {
-  return parseDay(key).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+  return parseDay(key).toLocaleDateString(LANG === "ru" ? "ru-RU" : "en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
 }
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -79,7 +96,7 @@ function extractDate(text: string, now: LocalNow): DateResult {
     if (!m[3] && key < now.date) {
       year += 1;
       key = `${year}-${pad(Number(m[2]))}-${pad(Number(m[1]))}`;
-      res.interpretations.push(`No year given — assumed ${pretty(key)} (the next upcoming one).`);
+      res.interpretations.push(M("No year given — assumed {date} (the next upcoming one).", { date: pretty(key) }));
     }
     res.date = key;
     return res;
@@ -99,7 +116,7 @@ function extractDate(text: string, now: LocalNow): DateResult {
       if (key < now.date) {
         year += 1;
         key = `${year}-${pad(month + 1)}-${pad(Number(dayStr))}`;
-        res.interpretations.push(`No year given — assumed ${pretty(key)} (the next upcoming one).`);
+        res.interpretations.push(M("No year given — assumed {date} (the next upcoming one).", { date: pretty(key) }));
       }
       res.date = key;
       return res;
@@ -148,9 +165,9 @@ function extractDate(text: string, now: LocalNow): DateResult {
     if (isNext) {
       if (diff === 0) diff = 7;
       else diff += 7;
-      res.interpretations.push(`Read "next ${wd.name}" as ${pretty(addDaysKey(now.date, diff))}. Change it if you meant the closer one.`);
+      res.interpretations.push(M('Read "next {day}" as {date}. Change it if you meant the closer one.', { day: wdName(wd), date: pretty(addDaysKey(now.date, diff)) }));
     } else if (diff === 0) {
-      res.interpretations.push(`Today is ${wd.name} — assumed you meant today.`);
+      res.interpretations.push(M("Today is {day} — assumed you meant today.", { day: wdName(wd) }));
     }
     let key = addDaysKey(now.date, diff);
     const prefix = before.match(/(before|by|until|till|до|к|ко)\s+(this\s+|next\s+|следующ\S*\s+)?$/);
@@ -158,7 +175,7 @@ function extractDate(text: string, now: LocalNow): DateResult {
       res.matched.push(prefix[0].trim());
       if (prefix[1] === "before") {
         const dl = addDaysKey(key, -1);
-        res.interpretations.push(`"${prefix[1]} ${/[а-яё]/.test(wm[0]) ? wm[0] : wd.name}" — set the deadline to ${pretty(dl)}, the day before.`);
+        res.interpretations.push(M('"{phrase}" — set the deadline to {date}, the day before.', { phrase: `${prefix[1]} ${/[а-яё]/.test(wm[0]) ? wm[0] : wd.name}`, date: pretty(dl) }));
         key = dl < now.date ? now.date : dl;
       }
     }
@@ -169,14 +186,14 @@ function extractDate(text: string, now: LocalNow): DateResult {
   }
 
   if (/\bnext week\b|на следующей неделе|на этой неделе|\bthis week\b|\blater\b|\bsoon\b|позже|скоро/.test(t)) {
-    res.clarifications.push("You mentioned a rough time frame — which exact day should I use?");
+    res.clarifications.push(M("You mentioned a rough time frame — which exact day should I use?"));
   }
   if (/\bthis weekend\b|на выходных/.test(t)) {
     const cur = weekday(now.date);
     const diff = (6 - cur + 7) % 7;
     res.date = addDaysKey(now.date, diff);
     res.matched.push(t.match(/\bthis weekend\b|на выходных/)![0]);
-    res.interpretations.push(`"This weekend" → set to Saturday ${pretty(res.date)}.`);
+    res.interpretations.push(M('"This weekend" → set to Saturday {date}.', { date: pretty(res.date) }));
   }
   return res;
 }
@@ -292,7 +309,7 @@ function extractTime(text: string, now: LocalNow, vague?: DateResult["vagueTime"
       if (hour < 12) hour += 12;
     }
     if (hour !== original || hour < 12) {
-      res.interpretations.push(`Interpreted "${original}" as ${pad(hour)}:${pad(minute)}${context ? ` (you said "${context}")` : ""} — change it if you meant ${hour >= 12 ? "AM" : "PM"}.`);
+      res.interpretations.push(M(hour >= 12 ? 'Interpreted "{n}" as {time} — change it if you meant the morning.' : 'Interpreted "{n}" as {time} — change it if you meant the afternoon or evening.', { n: original, time: `${pad(hour)}:${pad(minute)}` }));
     }
   }
   res.time = `${pad(hour)}:${pad(minute)}`;
@@ -340,8 +357,9 @@ function suggestCategory(text: string, available: string[]): { category: string 
   for (const rule of CATEGORY_RULES) {
     const m = text.match(rule.re);
     if (!m) continue;
-    const match = available.find((a) => a.toLowerCase() === rule.name.toLowerCase());
-    if (match) return { category: match, why: `Suggested category "${match}" because you mentioned "${m[0].trim()}".` };
+    const aliases = CATEGORY_ALIASES[rule.name] ?? [rule.name.toLowerCase()];
+    const match = available.find((a) => aliases.includes(a.toLowerCase()));
+    if (match) return { category: match, why: M('Suggested category "{cat}" because you mentioned "{word}".', { cat: match, word: m[0].trim() }) };
   }
   return { category: null, why: null };
 }
@@ -386,7 +404,7 @@ function cleanTitle(original: string, removals: string[]): string {
 
 function detectKind(t: string, hasDate: boolean, hasTime: boolean): { kind: CaptureKind; confidence: number; reason: string } {
   const s = t.toLowerCase();
-  if (/\bremind me\b|\breminder\b|\bset an? alarm\b|напомни|напоминани/.test(s)) return { kind: "reminder", confidence: 0.95, reason: 'You asked to be reminded.' };
+  if (/\bremind me\b|\breminder\b|\bset an? alarm\b|напомни|напоминани/.test(s)) return { kind: "reminder", confidence: 0.95, reason: "You asked to be reminded." };
   if (/^(remember that|note that|note:|fyi|keep in mind)|\bremember that\b|запомни|заметка|на заметку|имей в виду/.test(s)) return { kind: "note", confidence: 0.9, reason: "This is information to remember, not an action." };
   if (/\bidea\b|^what if\b|\bconcept for\b|идея|а что если/.test(s)) return { kind: "idea", confidence: 0.92, reason: "You described an idea." };
   if (/\bdon't forget\b|\bdo not forget\b|не забыть|не забудь/.test(s) && hasTime) return { kind: "reminder", confidence: 0.8, reason: '"Don\'t forget" with a time sounds like a reminder.' };
@@ -398,7 +416,8 @@ function detectKind(t: string, hasDate: boolean, hasTime: boolean): { kind: Capt
   return { kind: "note", confidence: 0.5, reason: "No clear action or date — saved as a note by default." };
 }
 
-export function heuristicCapture(input: string, now: LocalNow, categories: string[]): ExtractedItem[] {
+export function heuristicCapture(input: string, now: LocalNow, categories: string[], lang: Lang = "en"): ExtractedItem[] {
+  LANG = lang;
   const text = input.trim().replace(/\s+/g, " ");
   if (!text) return [];
 
@@ -411,36 +430,36 @@ export function heuristicCapture(input: string, now: LocalNow, categories: strin
 
   let date = timeR.relativeDate ?? dateR.date;
   let time = timeR.time;
-  const interpretations: string[] = [`Classified as ${kindR.kind}: ${kindR.reason}`, ...dateR.interpretations, ...timeR.interpretations];
+  const interpretations: string[] = [M("Classified as {kind}: {reason}", { kind: M(KIND_NAMES[kindR.kind]), reason: M(kindR.reason) }), ...dateR.interpretations, ...timeR.interpretations];
   const clarifications: string[] = [...dateR.clarifications];
 
   if (dateR.vagueTime && !time) {
-    clarifications.push(`You said "${dateR.vagueTime === "evening" ? "tonight" : dateR.vagueTime}" — what exact time?`);
+    clarifications.push(M('You said "{word}" — what exact time?', { word: M(dateR.vagueTime === "evening" ? "tonight" : dateR.vagueTime) }));
   }
 
   const kind = kindR.kind;
   if (kind === "reminder") {
-    if (!date && !time) clarifications.push("When should I remind you? Please add a date and time.");
-    else if (!time) clarifications.push("What time should I remind you?");
+    if (!date && !time) clarifications.push(M("When should I remind you? Please add a date and time."));
+    else if (!time) clarifications.push(M("What time should I remind you?"));
     else if (!date) {
       const future = time > now.time;
       date = future ? now.date : addDaysKey(now.date, 1);
-      interpretations.push(`No day mentioned — set to ${future ? "today" : "tomorrow"} (${pretty(date)}), the next time it's ${time}.`);
+      interpretations.push(M(future ? "No day mentioned — set to today ({date}), the next time it's {time}." : "No day mentioned — set to tomorrow ({date}), the next time it's {time}.", { date: pretty(date), time }));
     }
   }
   if (kind === "event") {
-    if (!date) clarifications.push("Which day is this on?");
-    if (!time) clarifications.push("What time does it start? (Leave empty for all-day.)");
+    if (!date) clarifications.push(M("Which day is this on?"));
+    if (!time) clarifications.push(M("What time does it start? (Leave empty for all-day.)"));
   }
   if (kind === "task" && time && !date) {
     const future = time > now.time;
     date = future ? now.date : addDaysKey(now.date, 1);
-    interpretations.push(`No day mentioned — set to ${future ? "today" : "tomorrow"} for ${time}.`);
+    interpretations.push(M(future ? "No day mentioned — set to today for {time}." : "No day mentioned — set to tomorrow for {time}.", { time }));
   }
 
   const cat = suggestCategory(text, categories);
   if (cat.why) interpretations.push(cat.why);
-  if (prioR.priority) interpretations.push(`Priority set to ${prioR.priority} because you said "${prioR.matched[0]}".`);
+  if (prioR.priority) interpretations.push(M('Priority set to {p} because you said "{word}".', { p: M(PRIORITY_NAMES[prioR.priority]), word: prioR.matched[0] }));
 
   const removals = [...dateR.matched, ...timeR.matched, ...prioR.matched, ...repR.matched];
   let title = cleanTitle(text, kind === "note" || kind === "idea" ? [...prioR.matched] : removals);
@@ -455,7 +474,7 @@ export function heuristicCapture(input: string, now: LocalNow, categories: strin
     }
     description = full !== title ? full : null;
     // dates are not stored on notes/ideas; keep them inside the text instead.
-    if (date) interpretations.push("Notes and ideas don't have due dates — the date stays in the text.");
+    if (date) interpretations.push(M("Notes and ideas don't have due dates — the date stays in the text."));
     date = null;
     time = null;
   }

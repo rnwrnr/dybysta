@@ -1,4 +1,5 @@
 "use client";
+import { LanguageSwitch, useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -57,6 +58,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { tasks, reminders } = useData();
   const now = useNow(60_000);
+  const { t } = useT();
   const today = toDateKey(now);
   const counts: Record<string, number> = {
     "/tasks": tasks.filter((t) => t.status !== "done" && (isTaskOverdue(t, now) || t.due_date === today)).length,
@@ -78,7 +80,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             )}
           >
             <Icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-            <span className="flex-1">{item.label}</span>
+            <span className="flex-1">{t(item.label)}</span>
             {counts[item.href] ? (
               <span className={cn("rounded px-1.5 text-[10px] font-semibold", item.href === "/reminders" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>
                 {counts[item.href]}
@@ -93,6 +95,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 function UserMenu() {
   const { profile, backend, mode } = useData();
+  const { t } = useT();
   const router = useRouter();
   const signOut = async () => {
     await backend.signOut();
@@ -107,28 +110,35 @@ function UserMenu() {
             {initials(profile.full_name)}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-medium">{profile.full_name ?? "You"}</span>
-            <span className="block truncate text-[11px] text-muted-foreground">{mode === "demo" ? "Demo account" : profile.email}</span>
+            <span className="block truncate text-[13px] font-medium">{profile.full_name ?? t("You")}</span>
+            <span className="block truncate text-[11px] text-muted-foreground">{mode === "demo" ? t("Demo account") : profile.email}</span>
           </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuLabel>{profile.email ?? "Signed in"}</DropdownMenuLabel>
+        <DropdownMenuLabel>{profile.email ?? t("Signed in")}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => router.push("/settings")}>
-          <Settings /> Settings
+          <Settings /> {t("Settings")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
-          <LogOut /> {mode === "demo" ? "Leave demo" : "Sign out"}
+          <LogOut /> {mode === "demo" ? t("Leave demo") : t("Sign out")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
+/** Switches the interface language and remembers it in the user's preferences. */
+function InterfaceLanguageSwitch() {
+  const { savePreferences } = useData();
+  return <LanguageSwitch beforeChange={(l) => savePreferences({ ui_language: l })} />;
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { mode, ai } = useData();
   const { openCapture } = useDialogs();
+  const { t } = useT();
   return (
     <div className="flex h-full flex-col gap-4 p-3">
       <div className="flex items-center justify-between px-1.5 pt-1">
@@ -143,7 +153,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         }}
         className="justify-start"
       >
-        <Plus /> Quick capture
+        <Plus /> {t("Quick capture")}
         <kbd className="ml-auto rounded bg-white/15 px-1.5 text-[10px] font-medium">C</kbd>
       </Button>
       <NavLinks onNavigate={onNavigate} />
@@ -151,10 +161,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         {(mode === "demo" || !ai.configured) && (
           <div className="rounded-lg border border-warning/30 bg-warning/8 p-2.5 text-[11.5px] leading-snug text-foreground/80">
             <p className="mb-0.5 flex items-center gap-1.5 font-semibold text-[oklch(0.5_0.13_60)]">
-              <FlaskConical className="size-3.5" /> Demo mode
+              <FlaskConical className="size-3.5" /> {t("Demo mode")}
             </p>
-            {mode === "demo" && <p>Data is stored only in this browser.</p>}
-            {!ai.configured && <p>AI responses are simulated (no OpenAI key).</p>}
+            {mode === "demo" && <p>{t("Data is stored only in this browser.")}</p>}
+            {!ai.configured && <p>{t("AI responses are simulated (no OpenAI key).")}</p>}
           </div>
         )}
         <Link
@@ -162,8 +172,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           onClick={onNavigate}
           className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <Settings className="size-4" /> Settings
+          <Settings className="size-4" /> {t("Settings")}
         </Link>
+        <div className="flex items-center justify-between px-2.5">
+          <span className="text-[12px] text-muted-foreground">{t("Language")}</span>
+          <InterfaceLanguageSwitch />
+        </div>
         <UserMenu />
       </div>
     </div>
@@ -172,14 +186,15 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 function CaptureDialog() {
   const { captureOpen, setCaptureOpen } = useDialogs();
+  const { t } = useT();
   return (
     <Dialog open={captureOpen} onOpenChange={setCaptureOpen}>
       <DialogContent className="top-[12%] translate-y-0 sm:max-w-2xl" hideClose>
         <div className="flex items-center justify-between">
-          <DialogTitle className="flex items-center gap-2">Quick capture</DialogTitle>
-          <span className="text-[11px] text-muted-foreground">Esc to close</span>
+          <DialogTitle className="flex items-center gap-2">{t("Quick capture")}</DialogTitle>
+          <span className="text-[11px] text-muted-foreground">{t("Esc to close")}</span>
         </div>
-        <DialogDescription className="-mt-2">Type or speak naturally. You&apos;ll review everything before it&apos;s saved.</DialogDescription>
+        <DialogDescription className="-mt-2">{t("Type or speak naturally. You'll review everything before it's saved.")}</DialogDescription>
         <CaptureComposer autoFocus compact onComplete={() => setCaptureOpen(false)} />
       </DialogContent>
     </Dialog>
@@ -206,13 +221,21 @@ function Shortcuts() {
 function ShellInner({ children }: { children: React.ReactNode }) {
   const { loading, error, reload, mode } = useData();
   const { openCapture } = useDialogs();
+  const { t } = useT();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   React.useEffect(() => {
-    if (error && /signed out/i.test(error) && mode === "supabase") router.replace("/login");
+    if (error && /signed out|вышли из аккаунта/i.test(error) && mode === "supabase") router.replace("/login");
   }, [error, mode, router]);
+
+  // Apply the language saved in the user's preferences (e.g. when signing in on a new device).
+  const { preferences } = useData();
+  const { lang, setLang } = useT();
+  React.useEffect(() => {
+    if (!loading && preferences.ui_language && preferences.ui_language !== lang) setLang(preferences.ui_language);
+  }, [loading, preferences.ui_language, lang, setLang]);
 
   return (
     <div className="flex min-h-dvh bg-background">
@@ -221,14 +244,14 @@ function ShellInner({ children }: { children: React.ReactNode }) {
       </aside>
       <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
         <DialogContent className="top-0 left-0 h-dvh max-h-dvh w-72 max-w-72 translate-x-0 translate-y-0 rounded-none border-r p-0 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left data-[state=open]:zoom-in-100" hideClose>
-          <DialogTitle className="sr-only">Navigation</DialogTitle>
-          <DialogDescription className="sr-only">Main navigation</DialogDescription>
+          <DialogTitle className="sr-only">{t("Navigation")}</DialogTitle>
+          <DialogDescription className="sr-only">{t("Main navigation")}</DialogDescription>
           <SidebarContent onNavigate={() => setMobileOpen(false)} />
         </DialogContent>
       </Dialog>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md lg:px-8">
-          <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label={t("Open menu")}>
             <Menu />
           </Button>
           <Link href="/dashboard" className="lg:hidden">
@@ -238,10 +261,10 @@ function ShellInner({ children }: { children: React.ReactNode }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="soft" size="sm" onClick={openCapture}>
-                <Plus /> <span className="hidden sm:inline">Capture</span>
+                <Plus /> <span className="hidden sm:inline">{t("Capture")}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Quick capture (C or ⌘K)</TooltipContent>
+            <TooltipContent>{t("Quick capture (C or ⌘K)")}</TooltipContent>
           </Tooltip>
           <NotificationCenter />
         </header>
@@ -252,10 +275,10 @@ function ShellInner({ children }: { children: React.ReactNode }) {
             </div>
           ) : error ? (
             <div className="mx-auto mt-20 max-w-md rounded-xl border bg-card p-6 text-center">
-              <p className="font-medium">Something went wrong loading your data</p>
+              <p className="font-medium">{t("Something went wrong loading your data")}</p>
               <p className="mt-1 text-[13px] text-muted-foreground">{error}</p>
               <Button className="mt-4" onClick={reload}>
-                Try again
+                {t("Try again")}
               </Button>
             </div>
           ) : (

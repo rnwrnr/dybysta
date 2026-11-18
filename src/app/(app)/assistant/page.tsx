@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, Bot, Loader2, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
@@ -15,8 +16,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const SUGGESTIONS = {
-  "en-US": ["What do I need to do tomorrow?", "What tasks have I forgotten?", "What was that business idea I mentioned last week?", "What should I prioritize today?"],
-  "ru-RU": ["Что мне нужно сделать завтра?", "Какие задачи я забыл?", "Какая была бизнес-идея на прошлой неделе?", "Что мне сделать в первую очередь сегодня?"],
+  en: ["What do I need to do tomorrow?", "What tasks have I forgotten?", "What was that business idea I mentioned last week?", "What should I prioritize today?"],
+  ru: ["Что мне нужно сделать завтра?", "Какие задачи я забыл?", "Какая была бизнес-идея на прошлой неделе?", "Что мне сделать в первую очередь сегодня?"],
 };
 const STORE_KEY = "dybysta:assistant:chat";
 
@@ -25,6 +26,7 @@ export default function AssistantPage() {
   const { open } = useDialogs();
   const router = useRouter();
   const lang = data.preferences.voice_language ?? "en-US";
+  const { t, lang: uiLang } = useT();
   const [messages, setMessages] = React.useState<AssistantMessage[]>([]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -64,13 +66,14 @@ export default function AssistantPage() {
           messages: next.slice(-10).map((m) => ({ role: m.role, content: m.content })),
           context: buildContext(data),
           language: data.preferences.ai_language ?? "auto",
+          uiLanguage: uiLang,
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "The assistant couldn't answer.");
+      if (!res.ok) throw new Error(json.error ?? t("The assistant couldn't answer."));
       setMessages((m) => [...m, { role: "assistant", content: json.answer, references: json.references, simulated: json.simulated }]);
     } catch (e) {
-      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${e instanceof Error ? e.message : "Something went wrong."}` }]);
+      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${e instanceof Error ? e.message : t("Something went wrong.")}` }]);
     } finally {
       setLoading(false);
     }
@@ -94,7 +97,7 @@ export default function AssistantPage() {
       if (i) return open({ type: "idea", editing: i });
     }
     if (type === "note") return router.push(`/notes?id=${id}`);
-    toast.error("That item no longer exists.");
+    toast.error(t("That item no longer exists."));
   };
 
   return (
@@ -102,15 +105,15 @@ export default function AssistantPage() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
-            Assistant {!data.ai.configured && <SimulatedBadge />}
+            {t("Assistant")} {!data.ai.configured && <SimulatedBadge />}
           </h1>
           <p className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
-            <ShieldCheck className="size-3.5 text-emerald-600" /> Answers only from your saved items — it never makes things up.
+            <ShieldCheck className="size-3.5 text-emerald-600" /> {t("Answers only from your saved items — it never makes things up.")}
           </p>
         </div>
         {messages.length > 0 && (
           <Button variant="ghost" size="xs" onClick={() => setMessages([])}>
-            <RotateCcw /> New chat
+            <RotateCcw /> {t("New chat")}
           </Button>
         )}
       </div>
@@ -121,10 +124,18 @@ export default function AssistantPage() {
             <span className="mb-3 inline-flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 text-white shadow-lg shadow-primary/20">
               <Bot className="size-5" />
             </span>
-            <p className="font-medium">Ask about your tasks, notes, ideas and plans</p>
-            <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">I can see {data.tasks.length} tasks, {data.reminders.length} reminders, {data.events.length} events, {data.notes.length} notes and {data.ideas.length} ideas.</p>
+            <p className="font-medium">{t("Ask about your tasks, notes, ideas and plans")}</p>
+            <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">
+              {t("I can see {tasks} tasks, {reminders} reminders, {events} events, {notes} notes and {ideas} ideas.", {
+                tasks: data.tasks.length,
+                reminders: data.reminders.length,
+                events: data.events.length,
+                notes: data.notes.length,
+                ideas: data.ideas.length,
+              })}
+            </p>
             <div className="mt-5 grid w-full max-w-lg gap-2 sm:grid-cols-2">
-              {SUGGESTIONS[lang].map((s) => (
+              {SUGGESTIONS[uiLang].map((s) => (
                 <button key={s} onClick={() => ask(s)} className="rounded-lg border bg-background px-3 py-2.5 text-left text-[13px] transition-colors hover:border-primary/30 hover:bg-accent/40">
                   {s}
                 </button>
@@ -158,7 +169,7 @@ export default function AssistantPage() {
                         })}
                       </div>
                     )}
-                    {m.simulated && <p className="mt-2 text-[11px] text-muted-foreground">Simulated AI · rule-based search of your saved items</p>}
+                    {m.simulated && <p className="mt-2 text-[11px] text-muted-foreground">{t("Simulated AI · rule-based search of your saved items")}</p>}
                   </div>
                 </div>
               )
@@ -168,7 +179,7 @@ export default function AssistantPage() {
                 <span className="inline-flex size-7 items-center justify-center rounded-lg bg-accent text-primary">
                   <Loader2 className="size-3.5 animate-spin" />
                 </span>
-                Looking through your saved items…
+                {t("Looking through your saved items…")}
               </div>
             )}
             <div ref={endRef} />
@@ -187,7 +198,7 @@ export default function AssistantPage() {
         <div className="min-w-0 flex-1">
           {speech.listening && (
             <p className="flex items-center gap-2 px-1 text-[12px] text-muted-foreground">
-              <ListeningBars /> <span className="truncate italic">{speech.interim || "Listening…"}</span>
+              <ListeningBars /> <span className="truncate italic">{speech.interim || t("Listening…")}</span>
             </p>
           )}
           <textarea
@@ -200,13 +211,13 @@ export default function AssistantPage() {
               }
             }}
             rows={1}
-            placeholder={lang === "ru-RU" ? "Спросите о своих задачах…" : "Ask about your tasks, ideas, notes…"}
-            aria-label="Ask the assistant"
+            placeholder={t("Ask about your tasks, ideas, notes…")}
+            aria-label={t("Ask the assistant")}
             className="block max-h-32 min-h-10 w-full resize-none bg-transparent px-1 py-2.5 text-[14px] outline-none placeholder:text-muted-foreground/60"
           />
         </div>
         <LanguageToggle value={lang} onChange={(v) => data.savePreferences({ voice_language: v })} />
-        <Button type="submit" size="icon" className="rounded-xl" disabled={!input.trim() || loading} aria-label="Send">
+        <Button type="submit" size="icon" className="rounded-xl" disabled={!input.trim() || loading} aria-label={t("Send")}>
           <ArrowUp />
         </Button>
       </form>

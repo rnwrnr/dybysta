@@ -25,5 +25,5 @@ export async function POST(req: Request) {
       console.error("[overview] OpenAI failed, falling back", e);
     }
   }
-  return NextResponse.json({ text: heuristicOverview(ctx), simulated: true });
+  return NextResponse.json({ text: heuristicOverview(ctx, language === "ru" ? "ru" : "en"), simulated: true });
 }

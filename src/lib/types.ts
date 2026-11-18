@@ -86,6 +86,7 @@ export interface CalendarEvent extends Owned {
 
 export interface UserPreferences {
   user_id: string;
+  ui_language: "en" | "ru";
   voice_language: VoiceLanguage;
   ai_language: "auto" | "en" | "ru";
   timezone: string;

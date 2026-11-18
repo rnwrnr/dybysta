@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,10 +30,11 @@ function useConfirmDelete() {
 }
 
 function DeleteButton({ onConfirm }: { onConfirm: () => void }) {
+  const { t } = useT();
   const { armed, arm } = useConfirmDelete();
   return (
     <Button type="button" variant={armed ? "destructive" : "ghost"} size="sm" className="mr-auto" onClick={() => (armed ? onConfirm() : arm())}>
-      <Trash2 /> {armed ? "Click again to delete" : "Delete"}
+      <Trash2 /> {armed ? t("Click again to delete") : t("Delete")}
     </Button>
   );
 }
@@ -40,6 +42,7 @@ function DeleteButton({ onConfirm }: { onConfirm: () => void }) {
 // ---------------------------------------------------------------------------
 export function TaskForm({ editing, initial, onDone }: FormProps<Task>) {
   const { create, update, remove } = useData();
+  const { t } = useT();
   const src = editing ?? initial ?? {};
   const [title, setTitle] = React.useState(src.title ?? "");
   const [description, setDescription] = React.useState(src.description ?? "");
@@ -72,38 +75,38 @@ export function TaskForm({ editing, initial, onDone }: FormProps<Task>) {
   return (
     <form onSubmit={submit} className="grid gap-4">
       <DialogHeader>
-        <DialogTitle>{editing ? "Edit task" : "New task"}</DialogTitle>
-        <DialogDescription className="sr-only">Task details</DialogDescription>
+        <DialogTitle>{editing ? t("Edit task") : t("New task")}</DialogTitle>
+        <DialogDescription className="sr-only">{t("Task details")}</DialogDescription>
       </DialogHeader>
-      <Field label="Title">
-        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" required maxLength={300} />
+      <Field label={t("Title")}>
+        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("What needs to be done?")} required maxLength={300} />
       </Field>
-      <Field label="Description">
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional details" rows={3} />
+      <Field label={t("Description")}>
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("Optional details")} rows={3} />
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Due date">
+        <Field label={t("Due date")}>
           <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </Field>
-        <Field label="Time">
+        <Field label={t("Time")}>
           <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} disabled={!dueDate} />
         </Field>
-        <Field label="Priority">
+        <Field label={t("Priority")}>
           <PrioritySelect value={priority} onChange={setPriority} />
         </Field>
-        <Field label="Category">
+        <Field label={t("Category")}>
           <CategorySelect value={categoryId} onChange={setCategoryId} />
         </Field>
         {editing && (
-          <Field label="Status">
+          <Field label={t("Status")}>
             <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todo">To do</SelectItem>
-                <SelectItem value="in_progress">In progress</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
+                <SelectItem value="todo">{t("To do")}</SelectItem>
+                <SelectItem value="in_progress">{t("In progress")}</SelectItem>
+                <SelectItem value="done">{t("Done")}</SelectItem>
               </SelectContent>
             </Select>
           </Field>
@@ -112,10 +115,10 @@ export function TaskForm({ editing, initial, onDone }: FormProps<Task>) {
       <DialogFooter>
         {editing && <DeleteButton onConfirm={async () => (await remove("tasks", editing.id)) && onDone(null)} />}
         <Button type="button" variant="outline" onClick={() => onDone(null)}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" disabled={saving || !title.trim()}>
-          {editing ? "Save changes" : "Create task"}
+          {editing ? t("Save changes") : t("Create task")}
         </Button>
       </DialogFooter>
     </form>
@@ -125,6 +128,7 @@ export function TaskForm({ editing, initial, onDone }: FormProps<Task>) {
 // ---------------------------------------------------------------------------
 export function ReminderForm({ editing, initial, onDone }: FormProps<Reminder>) {
   const { create, update, remove } = useData();
+  const { t } = useT();
   const src = editing ?? initial ?? {};
   const at = src.remind_at ? new Date(src.remind_at) : null;
   const [title, setTitle] = React.useState(src.title ?? "");
@@ -159,37 +163,37 @@ export function ReminderForm({ editing, initial, onDone }: FormProps<Reminder>) 
   return (
     <form onSubmit={submit} className="grid gap-4">
       <DialogHeader>
-        <DialogTitle>{editing ? "Edit reminder" : "New reminder"}</DialogTitle>
-        <DialogDescription>You&apos;ll get an in-app notification{" "}at the time you choose — and a browser notification if you enabled it in Settings.</DialogDescription>
+        <DialogTitle>{editing ? t("Edit reminder") : t("New reminder")}</DialogTitle>
+        <DialogDescription>{t("You'll get an in-app notification at the time you choose — and a browser notification if you enabled it in Settings.")}</DialogDescription>
       </DialogHeader>
-      <Field label="Remind me to…">
-        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Call the bank" required maxLength={300} />
+      <Field label={t("Remind me to…")}>
+        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("Call the bank")} required maxLength={300} />
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Date">
+        <Field label={t("Date")}>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </Field>
-        <Field label="Time">
+        <Field label={t("Time")}>
           <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
         </Field>
-        <Field label="Repeat">
+        <Field label={t("Repeat")}>
           <RepeatSelect value={repeat} onChange={setRepeat} />
         </Field>
-        <Field label="Category">
+        <Field label={t("Category")}>
           <CategorySelect value={categoryId} onChange={setCategoryId} />
         </Field>
       </div>
-      {inPast && <p className="text-xs text-warning">This time is in the past — the reminder will fire right away.</p>}
-      <Field label="Notes">
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Optional" />
+      {inPast && <p className="text-xs text-warning">{t("This time is in the past — the reminder will fire right away.")}</p>}
+      <Field label={t("Notes")}>
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder={t("Optional")} />
       </Field>
       <DialogFooter>
         {editing && <DeleteButton onConfirm={async () => (await remove("reminders", editing.id)) && onDone(null)} />}
         <Button type="button" variant="outline" onClick={() => onDone(null)}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" disabled={saving || !title.trim() || !when}>
-          {editing ? "Save changes" : "Set reminder"}
+          {editing ? t("Save changes") : t("Set reminder")}
         </Button>
       </DialogFooter>
     </form>
@@ -199,6 +203,7 @@ export function ReminderForm({ editing, initial, onDone }: FormProps<Reminder>) 
 // ---------------------------------------------------------------------------
 export function EventForm({ editing, initial, onDone }: FormProps<CalendarEvent>) {
   const { create, update, remove } = useData();
+  const { t } = useT();
   const src = editing ?? initial ?? {};
   const [title, setTitle] = React.useState(src.title ?? "");
   const [description, setDescription] = React.useState(src.description ?? "");
@@ -231,42 +236,42 @@ export function EventForm({ editing, initial, onDone }: FormProps<CalendarEvent>
   return (
     <form onSubmit={submit} className="grid gap-4">
       <DialogHeader>
-        <DialogTitle>{editing ? "Edit event" : "New event"}</DialogTitle>
-        <DialogDescription className="sr-only">Event details</DialogDescription>
+        <DialogTitle>{editing ? t("Edit event") : t("New event")}</DialogTitle>
+        <DialogDescription className="sr-only">{t("Event details")}</DialogDescription>
       </DialogHeader>
-      <Field label="Title">
-        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Team meeting" required maxLength={300} />
+      <Field label={t("Title")}>
+        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("Team meeting")} required maxLength={300} />
       </Field>
       <div className="grid grid-cols-3 gap-3">
-        <Field label="Date" className="col-span-3 sm:col-span-1">
+        <Field label={t("Date")} className="col-span-3 sm:col-span-1">
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </Field>
-        <Field label="Starts">
+        <Field label={t("Starts")}>
           <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
         </Field>
-        <Field label="Ends">
+        <Field label={t("Ends")}>
           <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} disabled={!start} aria-invalid={badRange} />
         </Field>
       </div>
-      {badRange && <p className="-mt-2 text-xs text-destructive">End time must be after the start time.</p>}
+      {badRange && <p className="-mt-2 text-xs text-destructive">{t("End time must be after the start time.")}</p>}
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Location">
-          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Optional" />
+        <Field label={t("Location")}>
+          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t("Optional")} />
         </Field>
-        <Field label="Category">
+        <Field label={t("Category")}>
           <CategorySelect value={categoryId} onChange={setCategoryId} />
         </Field>
       </div>
-      <Field label="Description">
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Optional" />
+      <Field label={t("Description")}>
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder={t("Optional")} />
       </Field>
       <DialogFooter>
         {editing && <DeleteButton onConfirm={async () => (await remove("events", editing.id)) && onDone(null)} />}
         <Button type="button" variant="outline" onClick={() => onDone(null)}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" disabled={saving || !title.trim() || !date || badRange}>
-          {editing ? "Save changes" : "Create event"}
+          {editing ? t("Save changes") : t("Create event")}
         </Button>
       </DialogFooter>
     </form>
@@ -276,6 +281,7 @@ export function EventForm({ editing, initial, onDone }: FormProps<CalendarEvent>
 // ---------------------------------------------------------------------------
 export function IdeaForm({ editing, initial, onDone }: FormProps<Idea>) {
   const { create, update, remove } = useData();
+  const { t } = useT();
   const src = editing ?? initial ?? {};
   const [title, setTitle] = React.useState(src.title ?? "");
   const [description, setDescription] = React.useState(src.description ?? "");
@@ -297,32 +303,32 @@ export function IdeaForm({ editing, initial, onDone }: FormProps<Idea>) {
   return (
     <form onSubmit={submit} className="grid gap-4">
       <DialogHeader>
-        <DialogTitle>{editing ? "Edit idea" : "New idea"}</DialogTitle>
-        <DialogDescription className="sr-only">Idea details</DialogDescription>
+        <DialogTitle>{editing ? t("Edit idea") : t("New idea")}</DialogTitle>
+        <DialogDescription className="sr-only">{t("Idea details")}</DialogDescription>
       </DialogHeader>
-      <Field label="Idea">
-        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="A short name for your idea" required maxLength={300} />
+      <Field label={t("Idea")}>
+        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("A short name for your idea")} required maxLength={300} />
       </Field>
-      <Field label="Details">
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="What's the idea? Why is it interesting?" />
+      <Field label={t("Details")}>
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder={t("What's the idea? Why is it interesting?")} />
       </Field>
-      <Field label="Tags">
+      <Field label={t("Tags")}>
         <TagInput value={tags} onChange={setTags} />
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Category">
+        <Field label={t("Category")}>
           <CategorySelect value={categoryId} onChange={setCategoryId} />
         </Field>
-        <Field label="Status">
+        <Field label={t("Status")}>
           <Select value={status} onValueChange={(v) => setStatus(v as IdeaStatus)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="exploring">Exploring</SelectItem>
-              <SelectItem value="converted">Converted to task</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
+              <SelectItem value="new">{t("New")}</SelectItem>
+              <SelectItem value="exploring">{t("Exploring")}</SelectItem>
+              <SelectItem value="converted">{t("Converted to task")}</SelectItem>
+              <SelectItem value="archived">{t("Archived")}</SelectItem>
             </SelectContent>
           </Select>
         </Field>
@@ -330,10 +336,10 @@ export function IdeaForm({ editing, initial, onDone }: FormProps<Idea>) {
       <DialogFooter>
         {editing && <DeleteButton onConfirm={async () => (await remove("ideas", editing.id)) && onDone(null)} />}
         <Button type="button" variant="outline" onClick={() => onDone(null)}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" disabled={saving || !title.trim()}>
-          {editing ? "Save changes" : "Save idea"}
+          {editing ? t("Save changes") : t("Save idea")}
         </Button>
       </DialogFooter>
     </form>

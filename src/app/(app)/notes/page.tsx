@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Bell, CheckCircle2, Check, Folder, Loader2, MoreHorizontal, Pin, PinOff, Plus, Search, StickyNote, Trash2 } from "lucide-react";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => void; onBack: () => void }) {
   const { update, remove, notes } = useData();
   const { open } = useDialogs();
+  const { t } = useT();
   const [draft, setDraft] = React.useState({ title: note.title, content: note.content, folder: note.folder ?? "", tags: note.tags, category_id: note.category_id });
   const [status, setStatus] = React.useState<"saved" | "saving" | "dirty">("saved");
   const folders = [...new Set(notes.map((n) => n.folder).filter(Boolean))] as string[];
@@ -29,46 +31,46 @@ function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => 
       return;
     }
     setStatus("dirty");
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       setStatus("saving");
-      const ok = await update("notes", note.id, { title: draft.title.trim() || "Untitled", content: draft.content, folder: draft.folder.trim() || null, tags: draft.tags, category_id: draft.category_id }, { silent: true });
+      const ok = await update("notes", note.id, { title: draft.title.trim() || t("Untitled"), content: draft.content, folder: draft.folder.trim() || null, tags: draft.tags, category_id: draft.category_id }, { silent: true });
       setStatus(ok ? "saved" : "dirty");
     }, 600);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft]);
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b px-4 py-2.5">
-        <Button variant="ghost" size="icon-xs" className="md:hidden" onClick={onBack} aria-label="Back to notes">
+        <Button variant="ghost" size="icon-xs" className="md:hidden" onClick={onBack} aria-label={t("Back to notes")}>
           <ArrowLeft />
         </Button>
         <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           {status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3" /> : null}
-          {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : "Editing…"}
+          {status === "saving" ? t("Saving…") : status === "saved" ? t("Saved") : t("Editing…")}
         </span>
         <AiBadge source={note.source} />
         <div className="flex-1" />
         <Button variant="ghost" size="xs" onClick={() => update("notes", note.id, { pinned: !note.pinned }, { silent: true })}>
-          {note.pinned ? <PinOff /> : <Pin />} {note.pinned ? "Unpin" : "Pin"}
+          {note.pinned ? <PinOff /> : <Pin />} {note.pinned ? t("Unpin") : t("Pin")}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-xs" aria-label="Note actions">
+            <Button variant="ghost" size="icon-xs" aria-label={t("Note actions")}>
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => open({ type: "task", initial: { title: draft.title, description: draft.content, category_id: draft.category_id }, onSaved: (t) => toast.success("Task created from note", { description: t.title }) })}>
-              <CheckCircle2 /> Convert to task
+            <DropdownMenuItem onClick={() => open({ type: "task", initial: { title: draft.title, description: draft.content, category_id: draft.category_id }, onSaved: (task) => toast.success(t("Task created from note"), { description: task.title }) })}>
+              <CheckCircle2 /> {t("Convert to task")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => open({ type: "reminder", initial: { title: draft.title, description: draft.content.slice(0, 500), category_id: draft.category_id } })}>
-              <Bell /> Create reminder
+              <Bell /> {t("Create reminder")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={async () => (await remove("notes", note.id)) && onDeleted()}>
-              <Trash2 /> Delete note
+              <Trash2 /> {t("Delete note")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -77,14 +79,14 @@ function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => 
         <input
           value={draft.title}
           onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-          placeholder="Untitled"
-          aria-label="Note title"
+          placeholder={t("Untitled")}
+          aria-label={t("Note title")}
           className="bg-transparent text-xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/50"
         />
         <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
           <div className="relative">
             <Folder className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input list="note-folders" value={draft.folder} onChange={(e) => setDraft((d) => ({ ...d, folder: e.target.value }))} placeholder="Folder" className="h-8 pl-8 text-[13px]" aria-label="Folder" />
+            <Input list="note-folders" value={draft.folder} onChange={(e) => setDraft((d) => ({ ...d, folder: e.target.value }))} placeholder={t("Folder")} className="h-8 pl-8 text-[13px]" aria-label={t("Folder")} />
             <datalist id="note-folders">
               {folders.map((f) => (
                 <option key={f} value={f} />
@@ -97,8 +99,8 @@ function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => 
         <textarea
           value={draft.content}
           onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
-          placeholder="Start writing…"
-          aria-label="Note content"
+          placeholder={t("Start writing…")}
+          aria-label={t("Note content")}
           className="min-h-[320px] flex-1 resize-none bg-transparent text-[14.5px] leading-relaxed outline-none placeholder:text-muted-foreground/50"
         />
       </div>
@@ -110,6 +112,7 @@ function NotesInner() {
   const { notes, create } = useData();
   const params = useSearchParams();
   const router = useRouter();
+  const { t } = useT();
   const [query, setQuery] = React.useState("");
   const [folder, setFolder] = React.useState<string | null>(null);
   const [tag, setTag] = React.useState<string | null>(null);
@@ -135,18 +138,18 @@ function NotesInner() {
   };
 
   const newNote = async () => {
-    const n = await create("notes", { title: "Untitled", content: "", folder, tags: tag ? [tag] : [], pinned: false, category_id: null, source: "manual" }, { silent: true });
+    const n = await create("notes", { title: t("Untitled"), content: "", folder, tags: tag ? [tag] : [], pinned: false, category_id: null, source: "manual" }, { silent: true });
     if (n) select(n.id);
   };
 
   return (
     <div>
       <PageHeader
-        title="Notes"
-        description="Everything worth remembering, organized your way."
+        title={t("Notes")}
+        description={t("Everything worth remembering, organized your way.")}
         actions={
           <Button size="sm" onClick={newNote}>
-            <Plus /> New note
+            <Plus /> {t("New note")}
           </Button>
         }
       />
@@ -155,7 +158,7 @@ function NotesInner() {
           <div className="grid gap-2 border-b p-3">
             <div className="relative">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search notes…" className="h-8 pl-8 text-[13px]" aria-label="Search notes" />
+              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search notes…")} className="h-8 pl-8 text-[13px]" aria-label={t("Search notes")} />
             </div>
             {(folders.length > 0 || tags.length > 0) && (
               <div className="flex flex-wrap gap-1">
@@ -164,16 +167,16 @@ function NotesInner() {
                     <Folder className="size-3" /> {f}
                   </button>
                 ))}
-                {tags.map((t) => (
-                  <button key={t} onClick={() => setTag(tag === t ? null : t)} className={cn("rounded px-1.5 py-0.5 text-[11px]", tag === t ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground hover:bg-accent/70")}>
-                    #{t}
+                {tags.map((tg) => (
+                  <button key={tg} onClick={() => setTag(tag === tg ? null : tg)} className={cn("rounded px-1.5 py-0.5 text-[11px]", tag === tg ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground hover:bg-accent/70")}>
+                    #{tg}
                   </button>
                 ))}
               </div>
             )}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-1.5 scrollbar-thin">
-            {filtered.length === 0 && <p className="px-3 py-8 text-center text-[13px] text-muted-foreground">{notes.length ? "No notes match." : "No notes yet."}</p>}
+            {filtered.length === 0 && <p className="px-3 py-8 text-center text-[13px] text-muted-foreground">{notes.length ? t("No notes match.") : t("No notes yet.")}</p>}
             {filtered.map((n) => (
               <button
                 key={n.id}
@@ -182,9 +185,9 @@ function NotesInner() {
               >
                 <p className="flex items-center gap-1.5 truncate text-[13px] font-medium">
                   {n.pinned && <Pin className="size-3 shrink-0 text-primary" />}
-                  {n.title || "Untitled"}
+                  {n.title || t("Untitled")}
                 </p>
-                <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">{n.content || "Empty note"}</p>
+                <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">{n.content || t("Empty note")}</p>
                 <p className="mt-1 flex items-center gap-2 text-[10.5px] text-muted-foreground/80">
                   {relativeDayLabel(new Date(n.updated_at))}
                   {n.folder && (
@@ -204,11 +207,11 @@ function NotesInner() {
             <div className="flex h-full items-center justify-center p-6">
               <EmptyState
                 icon={StickyNote}
-                title="Select a note"
-                description='Or say "Remember that…" in Quick capture to save one with AI.'
+                title={t("Select a note")}
+                description={t('Or say "Remember that…" in Quick capture to save one with AI.')}
                 action={
                   <Button size="sm" variant="outline" onClick={newNote}>
-                    <Plus /> New note
+                    <Plus /> {t("New note")}
                   </Button>
                 }
               />

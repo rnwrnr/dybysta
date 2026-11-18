@@ -1,9 +1,10 @@
 "use client";
 import { addDays, addMinutes, setHours, setMinutes, startOfDay, subDays } from "date-fns";
 import { toDateKey } from "@/lib/dates";
+import { getCurrentLang, t, type Lang } from "@/lib/i18n/core";
 import type { Category, Profile, TableMap, TableName, UserPreferences } from "@/lib/types";
 import { uid } from "@/lib/utils";
-import { DEFAULT_CATEGORIES, DEFAULT_PREFERENCES, type DataBackend, type Snapshot } from "./backend";
+import { defaultCategories, DEFAULT_PREFERENCES, type DataBackend, type Snapshot } from "./backend";
 
 const STORAGE_KEY = "dybysta:demo:data:v1";
 const SESSION_KEY = "dybysta:demo:session";
@@ -19,11 +20,11 @@ export function getDemoSession(): { name: string } | null {
   }
 }
 
-export function startDemoSession(name: string) {
+export function startDemoSession(name: string, lang: Lang = "en") {
   localStorage.setItem(SESSION_KEY, JSON.stringify({ name }));
   const existing = localStorage.getItem(STORAGE_KEY);
   if (!existing) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed(name)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed(name, lang)));
   } else {
     const data = JSON.parse(existing) as Snapshot;
     data.profile.full_name = name;
@@ -35,47 +36,51 @@ function now() {
   return new Date().toISOString();
 }
 
-function seed(name: string): Snapshot {
+function seed(name: string, lang: Lang = getCurrentLang()): Snapshot {
   const created = now();
+  const ru = lang === "ru";
+  const L = (en: string, r: string) => (ru ? r : en);
   const base = { user_id: DEMO_USER, created_at: created, updated_at: created };
-  const categories: Category[] = DEFAULT_CATEGORIES.map((c) => ({ id: uid(), user_id: DEMO_USER, created_at: created, ...c }));
-  const cat = (n: string) => categories.find((c) => c.name === n)!.id;
+  const defs = defaultCategories(lang);
+  const categories: Category[] = defs.map((c) => ({ id: uid(), user_id: DEMO_USER, created_at: created, name: c.name, color: c.color }));
+  // look up by English key regardless of display language
+  const cat = (n: string) => categories[defs.findIndex((c) => c.key === n)].id;
   const today = new Date();
   const d = (offset: number) => toDateKey(addDays(today, offset));
   const at = (offset: number, h: number, m = 0) => setMinutes(setHours(startOfDay(addDays(today, offset)), h), m).toISOString();
 
   const tasks: TableMap["tasks"][] = [
-    { id: uid(), ...base, title: "Finish marketing presentation", description: "Slides 8–14 still need data from the survey.", due_date: d(2), due_time: null, priority: "high", status: "in_progress", category_id: cat("Study"), completed_at: null, source: "ai" },
-    { id: uid(), ...base, title: "Reply to internship email", description: null, due_date: d(0), due_time: "16:00", priority: "urgent", status: "todo", category_id: cat("Work"), completed_at: null, source: "manual" },
-    { id: uid(), ...base, title: "Buy groceries", description: "Milk, oats, apples, coffee", due_date: d(0), due_time: null, priority: "low", status: "todo", category_id: cat("Personal"), completed_at: null, source: "manual" },
-    { id: uid(), ...base, title: "Submit statistics homework", description: null, due_date: d(-1), due_time: "23:59", priority: "high", status: "todo", category_id: cat("Study"), completed_at: null, source: "manual" },
-    { id: uid(), ...base, title: "Pay phone bill", description: null, due_date: d(-3), due_time: null, priority: "medium", status: "todo", category_id: cat("Finance"), completed_at: null, source: "manual" },
-    { id: uid(), ...base, title: "Book dentist appointment", description: null, due_date: d(5), due_time: null, priority: "medium", status: "todo", category_id: cat("Health"), completed_at: null, source: "manual" },
-    { id: uid(), ...base, title: "Read chapter 4 of Thinking, Fast and Slow", description: null, due_date: null, due_time: null, priority: "low", status: "todo", category_id: cat("Personal"), completed_at: null, source: "manual", created_at: subDays(today, 12).toISOString() },
-    { id: uid(), ...base, title: "Update CV", description: null, due_date: d(-2), due_time: null, priority: "medium", status: "done", category_id: cat("Work"), completed_at: subDays(today, 2).toISOString(), source: "manual" },
+    { id: uid(), ...base, title: L("Finish marketing presentation", "Закончить презентацию по маркетингу"), description: L("Slides 8–14 still need data from the survey.", "Для слайдов 8–14 нужны данные опроса."), due_date: d(2), due_time: null, priority: "high", status: "in_progress", category_id: cat("Study"), completed_at: null, source: "ai" },
+    { id: uid(), ...base, title: L("Reply to internship email", "Ответить на письмо о стажировке"), description: null, due_date: d(0), due_time: "16:00", priority: "urgent", status: "todo", category_id: cat("Work"), completed_at: null, source: "manual" },
+    { id: uid(), ...base, title: L("Buy groceries", "Купить продукты"), description: L("Milk, oats, apples, coffee", "Молоко, овсянка, яблоки, кофе"), due_date: d(0), due_time: null, priority: "low", status: "todo", category_id: cat("Personal"), completed_at: null, source: "manual" },
+    { id: uid(), ...base, title: L("Submit statistics homework", "Сдать домашку по статистике"), description: null, due_date: d(-1), due_time: "23:59", priority: "high", status: "todo", category_id: cat("Study"), completed_at: null, source: "manual" },
+    { id: uid(), ...base, title: L("Pay phone bill", "Оплатить телефон"), description: null, due_date: d(-3), due_time: null, priority: "medium", status: "todo", category_id: cat("Finance"), completed_at: null, source: "manual" },
+    { id: uid(), ...base, title: L("Book dentist appointment", "Записаться к стоматологу"), description: null, due_date: d(5), due_time: null, priority: "medium", status: "todo", category_id: cat("Health"), completed_at: null, source: "manual" },
+    { id: uid(), ...base, title: L("Read chapter 4 of Thinking, Fast and Slow", "Прочитать 4 главу «Думай медленно… решай быстро»"), description: null, due_date: null, due_time: null, priority: "low", status: "todo", category_id: cat("Personal"), completed_at: null, source: "manual", created_at: subDays(today, 12).toISOString() },
+    { id: uid(), ...base, title: L("Update CV", "Обновить резюме"), description: null, due_date: d(-2), due_time: null, priority: "medium", status: "done", category_id: cat("Work"), completed_at: subDays(today, 2).toISOString(), source: "manual" },
   ];
   const reminders: TableMap["reminders"][] = [
-    { id: uid(), ...base, title: "Call professor Ahmetova about thesis topic", description: null, remind_at: at(1, 15), repeat: "none", status: "pending", last_notified_at: null, task_id: null, category_id: cat("Study"), source: "ai" },
-    { id: uid(), ...base, title: "Drink water & stretch", description: null, remind_at: addMinutes(today, 2).toISOString(), repeat: "none", status: "pending", last_notified_at: null, task_id: null, category_id: cat("Health"), source: "manual" },
-    { id: uid(), ...base, title: "Weekly review", description: "Look at next week's plan", remind_at: at(3, 18), repeat: "weekly", status: "pending", last_notified_at: null, task_id: null, category_id: cat("Personal"), source: "manual" },
+    { id: uid(), ...base, title: L("Call professor Ahmetova about thesis topic", "Позвонить профессору Ахметовой насчёт темы диплома"), description: null, remind_at: at(1, 15), repeat: "none", status: "pending", last_notified_at: null, task_id: null, category_id: cat("Study"), source: "ai" },
+    { id: uid(), ...base, title: L("Drink water & stretch", "Выпить воды и размяться"), description: null, remind_at: addMinutes(today, 2).toISOString(), repeat: "none", status: "pending", last_notified_at: null, task_id: null, category_id: cat("Health"), source: "manual" },
+    { id: uid(), ...base, title: L("Weekly review", "Обзор недели"), description: L("Look at next week's plan", "Посмотреть план на следующую неделю"), remind_at: at(3, 18), repeat: "weekly", status: "pending", last_notified_at: null, task_id: null, category_id: cat("Personal"), source: "manual" },
   ];
   const notes: TableMap["notes"][] = [
-    { id: uid(), ...base, title: "Assem prefers afternoon meetings", content: "Remember that Assem prefers meetings in the afternoon — ideally after 14:00.", folder: "People", tags: ["team"], pinned: true, category_id: cat("Work"), source: "ai" },
-    { id: uid(), ...base, title: "Thesis outline", content: "1. Introduction\n2. Literature review\n3. Methodology — survey of 120 students\n4. Results\n5. Discussion", folder: "University", tags: ["thesis"], pinned: false, category_id: cat("Study"), source: "manual" },
-    { id: uid(), ...base, title: "Wi-Fi at the co-working", content: "Network: Hub-Guest. Ask at the reception for the weekly password.", folder: null, tags: [], pinned: false, category_id: null, source: "manual" },
+    { id: uid(), ...base, title: L("Assem prefers afternoon meetings", "Асем предпочитает встречи после обеда"), content: L("Remember that Assem prefers meetings in the afternoon — ideally after 14:00.", "Асем предпочитает встречи во второй половине дня — лучше после 14:00."), folder: L("People", "Люди"), tags: [L("team", "команда")], pinned: true, category_id: cat("Work"), source: "ai" },
+    { id: uid(), ...base, title: L("Thesis outline", "План диплома"), content: L("1. Introduction\n2. Literature review\n3. Methodology — survey of 120 students\n4. Results\n5. Discussion", "1. Введение\n2. Обзор литературы\n3. Методология — опрос 120 студентов\n4. Результаты\n5. Обсуждение"), folder: L("University", "Университет"), tags: [L("thesis", "диплом")], pinned: false, category_id: cat("Study"), source: "manual" },
+    { id: uid(), ...base, title: L("Wi-Fi at the co-working", "Wi-Fi в коворкинге"), content: L("Network: Hub-Guest. Ask at the reception for the weekly password.", "Сеть: Hub-Guest. Пароль на неделю — на ресепшене."), folder: null, tags: [], pinned: false, category_id: null, source: "manual" },
   ];
   const ideas: TableMap["ideas"][] = [
-    { id: uid(), ...base, title: "University marketplace", description: "A marketplace where students buy and sell used textbooks and dorm items, verified by university email.", tags: ["startup", "students"], status: "exploring", converted_task_id: null, category_id: cat("Work"), source: "ai", created_at: subDays(today, 6).toISOString() },
-    { id: uid(), ...base, title: "Habit tracker for study groups", description: "Shared streaks to keep study groups accountable.", tags: ["app"], status: "new", converted_task_id: null, category_id: cat("Study"), source: "manual", created_at: subDays(today, 20).toISOString() },
+    { id: uid(), ...base, title: L("University marketplace", "Маркетплейс для студентов"), description: L("A marketplace where students buy and sell used textbooks and dorm items, verified by university email.", "Бизнес-идея: маркетплейс, где студенты покупают и продают б/у учебники и вещи для общежития, с проверкой по университетской почте."), tags: [L("startup", "стартап"), L("students", "студенты")], status: "exploring", converted_task_id: null, category_id: cat("Work"), source: "ai", created_at: subDays(today, 6).toISOString() },
+    { id: uid(), ...base, title: L("Habit tracker for study groups", "Трекер привычек для учебных групп"), description: L("Shared streaks to keep study groups accountable.", "Общие серии, чтобы группа не бросала занятия."), tags: [L("app", "приложение")], status: "new", converted_task_id: null, category_id: cat("Study"), source: "manual", created_at: subDays(today, 20).toISOString() },
   ];
   const events: TableMap["events"][] = [
-    { id: uid(), ...base, title: "Team sync", description: null, start_date: d(0), start_time: "10:00", end_time: "10:30", location: "Zoom", category_id: cat("Work"), source: "manual" },
-    { id: uid(), ...base, title: "Marketing lecture", description: null, start_date: d(1), start_time: "09:00", end_time: "10:30", location: "Room 204", category_id: cat("Study"), source: "manual" },
-    { id: uid(), ...base, title: "Dinner with Dana", description: null, start_date: d(4), start_time: "19:30", end_time: null, location: null, category_id: cat("Personal"), source: "manual" },
+    { id: uid(), ...base, title: L("Team sync", "Планёрка команды"), description: null, start_date: d(0), start_time: "10:00", end_time: "10:30", location: "Zoom", category_id: cat("Work"), source: "manual" },
+    { id: uid(), ...base, title: L("Marketing lecture", "Лекция по маркетингу"), description: null, start_date: d(1), start_time: "09:00", end_time: "10:30", location: L("Room 204", "Аудитория 204"), category_id: cat("Study"), source: "manual" },
+    { id: uid(), ...base, title: L("Dinner with Dana", "Ужин с Даной"), description: null, start_date: d(4), start_time: "19:30", end_time: null, location: null, category_id: cat("Personal"), source: "manual" },
   ];
   return {
     profile: { id: DEMO_USER, full_name: name, avatar_url: null, email: "demo@dybysta.local", created_at: created },
-    preferences: { user_id: DEMO_USER, ...DEFAULT_PREFERENCES },
+    preferences: { user_id: DEMO_USER, ...DEFAULT_PREFERENCES, ui_language: lang, voice_language: ru ? "ru-RU" : "en-US", ai_language: ru ? "ru" : "auto" },
     categories,
     tasks,
     reminders,
@@ -92,14 +97,14 @@ export class DemoBackend implements DataBackend {
   private read(): Snapshot {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const s = seed(getDemoSession()?.name ?? "Guest");
+      const s = seed(getDemoSession()?.name ?? t("Guest"));
       this.write(s);
       return s;
     }
     try {
       return JSON.parse(raw) as Snapshot;
     } catch {
-      throw new Error("Local demo data is corrupted. Reset it from Settings → Account.");
+      throw new Error(t("Local demo data is corrupted. Reset it from Settings → Account."));
     }
   }
 
@@ -107,7 +112,7 @@ export class DemoBackend implements DataBackend {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
     } catch {
-      throw new Error("Browser storage is full or unavailable.");
+      throw new Error(t("Browser storage is full or unavailable."));
     }
   }
 
@@ -129,7 +134,7 @@ export class DemoBackend implements DataBackend {
     const s = this.read();
     const list = s[table] as TableMap[T][];
     const idx = list.findIndex((r) => r.id === id);
-    if (idx < 0) throw new Error("Item not found — it may have been deleted.");
+    if (idx < 0) throw new Error(t("Item not found — it may have been deleted."));
     const next = { ...list[idx], ...patch, id, updated_at: now() } as TableMap[T];
     list[idx] = next;
     this.write(s);
@@ -185,6 +190,6 @@ export class DemoBackend implements DataBackend {
 }
 
 export function resetDemoData() {
-  const name = getDemoSession()?.name ?? "Guest";
+  const name = getDemoSession()?.name ?? t("Guest");
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seed(name)));
 }

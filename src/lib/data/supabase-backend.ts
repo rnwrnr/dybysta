@@ -2,10 +2,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import type { Profile, TableMap, TableName, UserPreferences } from "@/lib/types";
-import { DEFAULT_CATEGORIES, DEFAULT_PREFERENCES, type DataBackend, type Snapshot } from "./backend";
+import { getCurrentLang, t } from "@/lib/i18n/core";
+import { defaultCategories, DEFAULT_PREFERENCES, type DataBackend, type Snapshot } from "./backend";
 
 function fail(error: { message: string } | null, context: string): never {
-  throw new Error(`${context}: ${error?.message ?? "unknown error"}`);
+  throw new Error(`${t(context)}: ${error?.message ?? "unknown error"}`);
 }
 
 /** Converts empty strings to null for nullable DB columns so Postgres accepts them. */
@@ -26,14 +27,14 @@ export class SupabaseBackend implements DataBackend {
   private async uid(): Promise<string> {
     if (this.userId) return this.userId;
     const { data, error } = await this.sb.auth.getUser();
-    if (error || !data.user) throw new Error("You are signed out. Please sign in again.");
+    if (error || !data.user) throw new Error(t("You are signed out. Please sign in again."));
     this.userId = data.user.id;
     return data.user.id;
   }
 
   async load(): Promise<Snapshot> {
     const { data: auth, error: authErr } = await this.sb.auth.getUser();
-    if (authErr || !auth.user) throw new Error("You are signed out. Please sign in again.");
+    if (authErr || !auth.user) throw new Error(t("You are signed out. Please sign in again."));
     const user = auth.user;
     this.userId = user.id;
 
@@ -47,17 +48,8 @@ export class SupabaseBackend implements DataBackend {
       this.sb.from("ideas").select("*").order("created_at", { ascending: false }),
       this.sb.from("events").select("*").order("start_date"),
     ]);
-    for (const [res, name] of [
-      [profileRes, "profile"],
-      [prefsRes, "preferences"],
-      [cats, "categories"],
-      [tasks, "tasks"],
-      [reminders, "reminders"],
-      [notes, "notes"],
-      [ideas, "ideas"],
-      [events, "events"],
-    ] as const) {
-      if (res.error) fail(res.error, `Could not load ${name}`);
+    for (const res of [profileRes, prefsRes, cats, tasks, reminders, notes, ideas, events]) {
+      if (res.error) fail(res.error, "Could not load your data");
     }
 
     // Self-heal if the signup trigger was not installed.
@@ -75,7 +67,7 @@ export class SupabaseBackend implements DataBackend {
     if (!preferences) {
       const { data, error } = await this.sb
         .from("user_preferences")
-        .upsert({ user_id: user.id, ...DEFAULT_PREFERENCES })
+        .upsert({ user_id: user.id, ...DEFAULT_PREFERENCES, ui_language: getCurrentLang() })
         .select()
         .single();
       if (error) fail(error, "Could not create preferences");
@@ -85,7 +77,7 @@ export class SupabaseBackend implements DataBackend {
     if (categories.length === 0) {
       const { data, error } = await this.sb
         .from("categories")
-        .insert(DEFAULT_CATEGORIES.map((c) => ({ ...c, user_id: user.id })))
+        .insert(defaultCategories(getCurrentLang()).map((c) => ({ name: c.name, color: c.color, user_id: user.id })))
         .select();
       if (!error && data) categories = data as TableMap["categories"][];
     }
@@ -109,7 +101,7 @@ export class SupabaseBackend implements DataBackend {
       .insert({ ...clean(row as Record<string, unknown>), user_id })
       .select()
       .single();
-    if (error) fail(error, `Could not save to ${table}`);
+    if (error) fail(error, "Could not save");
     return data as TableMap[T];
   }
 
@@ -120,13 +112,13 @@ export class SupabaseBackend implements DataBackend {
       .eq("id", id)
       .select()
       .single();
-    if (error) fail(error, `Could not update ${table}`);
+    if (error) fail(error, "Could not update");
     return data as TableMap[T];
   }
 
   async remove(table: TableName, id: string): Promise<void> {
     const { error } = await this.sb.from(table).delete().eq("id", id);
-    if (error) fail(error, `Could not delete from ${table}`);
+    if (error) fail(error, "Could not delete");
   }
 
   async savePreferences(patch: Partial<UserPreferences>): Promise<UserPreferences> {
@@ -158,7 +150,7 @@ export class SupabaseBackend implements DataBackend {
     // Order matters for foreign keys (reminders/ideas reference tasks).
     for (const table of ["reminders", "ideas", "notes", "events", "tasks"] as const) {
       const { error } = await this.sb.from(table).delete().eq("user_id", user_id);
-      if (error) fail(error, `Could not delete ${table}`);
+      if (error) fail(error, "Could not delete");
     }
   }
 

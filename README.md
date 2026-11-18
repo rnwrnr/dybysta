@@ -23,7 +23,7 @@ Open http://localhost:3000.
 ### Supabase setup
 
 1. Create a project at supabase.com.
-2. Run `supabase/migrations/0001_init.sql` in the SQL editor (or `supabase db push`).
+2. Run `supabase/migrations/0001_init.sql`, then `0002_russian_ui.sql`, in the SQL editor (or `supabase db push`).
 3. Put the project URL and anon key in `.env.local`.
 4. In Auth → URL configuration, add `http://localhost:3000/auth/callback` (and your production URL) as a redirect URL for email confirmation.
 
@@ -41,6 +41,14 @@ The migration creates `profiles`, `user_preferences`, `categories`, `tasks`, `re
 - **Calendar**: month and week views showing events, tasks and reminders, with type and category filters. Add items from any day.
 - **Assistant**: chat grounded only in your saved items. It cites the items it used (clickable) and says when it can't find something.
 - **Settings**: profile, voice and AI language, week start, notification controls, AI and privacy explanation, category management, JSON/CSV export, and delete items or account.
+
+## Languages (English / Русский)
+
+- The whole interface is available in English and Russian. Switch it in the sidebar (EN / RU) or in **Settings → Language**. The choice is saved to your preferences and a cookie. On first visit, the language is detected from the browser (Russian and Kazakh browsers get Russian).
+- Dates use Russian formatting ("Завтра, 15:00").
+- The simulated AI (capture explanations, assistant, daily overview) answers in Russian. With OpenAI, explanations follow the interface language. The assistant follows **AI response language** in Settings, which defaults to the language of your question.
+- New Russian-language accounts and demo sessions get Russian category names and sample data.
+- Translations live in `src/lib/i18n/ru.ts`, keyed by the English text. A missing key falls back to English. Components use `const { t } = useT()`.
 
 ## Architecture
 

@@ -1,7 +1,8 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import Link from "next/link";
-import { format, startOfDay, addDays } from "date-fns";
+import { startOfDay, addDays } from "date-fns";
 import { AlertCircle, ArrowRight, CalendarClock, CheckCircle2, Lightbulb, Pin, Plus, StickyNote, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { useDialogs } from "@/components/app/dialogs";
 import { CaptureComposer } from "@/components/capture/capture-composer";
 import { DailyOverview } from "@/components/dashboard/daily-overview";
 import { EventRow, ReminderRow, TaskRow } from "@/components/items/rows";
-import { eventStart, greeting, isActiveReminder, isTaskOverdue, relativeDayLabel, toDateKey } from "@/lib/dates";
+import { eventStart, fmt, greeting, isActiveReminder, isTaskOverdue, relativeDayLabel, toDateKey } from "@/lib/dates";
 import { useData } from "@/lib/data/store";
 import { useNow } from "@/hooks/use-now";
 
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   const { profile, tasks, reminders, events, notes, ideas } = useData();
   const { open } = useDialogs();
   const now = useNow(30_000);
+  const { t, lang } = useT();
   const today = toDateKey(now);
   const firstName = profile.full_name?.split(" ")[0];
 
@@ -61,22 +63,22 @@ export default function DashboardPage() {
   return (
     <div className="grid gap-6">
       <div>
-        <p className="text-[13px] text-muted-foreground">{format(now, "EEEE, MMMM d")}</p>
+        <p className="text-[13px] text-muted-foreground">{fmt(now, lang === "ru" ? "EEEE, d MMMM" : "EEEE, MMMM d")}</p>
         <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">
           {greeting(now)}
           {firstName ? `, ${firstName}` : ""}
         </h1>
       </div>
 
-      <section aria-label="Quick capture">
+      <section aria-label={t("Capture")}>
         <CaptureComposer />
       </section>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Due today" value={openToday} icon={Sun} tone="bg-blue-50 text-blue-600" href="/tasks" />
-        <Stat label="Overdue" value={overdue.length} icon={AlertCircle} tone="bg-red-50 text-red-600" href="/tasks?filter=overdue" />
-        <Stat label="Reminders this week" value={upcomingReminders.length} icon={CalendarClock} tone="bg-amber-50 text-amber-600" href="/reminders" />
-        <Stat label="Ideas" value={ideas.filter((i) => i.status !== "archived").length} icon={Lightbulb} tone="bg-violet-50 text-violet-600" href="/ideas" />
+        <Stat label={t("Due today")} value={openToday} icon={Sun} tone="bg-blue-50 text-blue-600" href="/tasks" />
+        <Stat label={t("Overdue")} value={overdue.length} icon={AlertCircle} tone="bg-red-50 text-red-600" href="/tasks?filter=overdue" />
+        <Stat label={t("Reminders this week")} value={upcomingReminders.length} icon={CalendarClock} tone="bg-amber-50 text-amber-600" href="/reminders" />
+        <Stat label={t("Ideas")} value={ideas.filter((i) => i.status !== "archived").length} icon={Lightbulb} tone="bg-violet-50 text-violet-600" href="/ideas" />
       </div>
 
       <DailyOverview />
@@ -87,7 +89,7 @@ export default function DashboardPage() {
             <Card className="border-destructive/20">
               <CardHeader>
                 <CardTitle className="text-destructive">
-                  <AlertCircle className="size-4" /> Overdue
+                  <AlertCircle className="size-4" /> {t("Overdue")}
                   <span className="rounded bg-destructive/10 px-1.5 text-[11px]">{overdue.length}</span>
                 </CardTitle>
               </CardHeader>
@@ -97,7 +99,7 @@ export default function DashboardPage() {
                 ))}
                 {overdue.length > 5 && (
                   <Link href="/tasks?filter=overdue" className="block px-2 pt-1 text-[12px] text-muted-foreground hover:text-foreground">
-                    +{overdue.length - 5} more
+                    {t("+{n} more", { n: overdue.length - 5 })}
                   </Link>
                 )}
               </CardContent>
@@ -107,18 +109,16 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                <Sun className="size-4 text-blue-600" /> Today
-                <span className="text-[12px] font-normal text-muted-foreground">
-                  {todayTasks.length - openToday}/{todayTasks.length} done
-                </span>
+                <Sun className="size-4 text-blue-600" /> {t("Today")}
+                <span className="text-[12px] font-normal text-muted-foreground">{t("{done}/{total} done", { done: todayTasks.length - openToday, total: todayTasks.length })}</span>
               </CardTitle>
               <Button variant="ghost" size="xs" onClick={() => open({ type: "task", initial: { due_date: today } })}>
-                <Plus /> Add
+                <Plus /> {t("Add")}
               </Button>
             </CardHeader>
             <CardContent className="px-3">
               {todayTasks.length === 0 ? (
-                <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">Nothing due today. Enjoy the space — or capture something above.</p>
+                <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">{t("Nothing due today. Enjoy the space — or capture something above.")}</p>
               ) : (
                 todayTasks.map((t) => <TaskRow key={t.id} task={t} showDate={false} />)
               )}
@@ -128,14 +128,14 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                <StickyNote className="size-4 text-emerald-600" /> Recent notes
+                <StickyNote className="size-4 text-emerald-600" /> {t("Recent notes")}
               </CardTitle>
               <Link href="/notes" className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground">
-                All notes <ArrowRight className="size-3" />
+                {t("All notes")} <ArrowRight className="size-3" />
               </Link>
             </CardHeader>
             <CardContent className="grid gap-2 sm:grid-cols-2">
-              {recentNotes.length === 0 && <p className="py-4 text-[13px] text-muted-foreground">No notes yet.</p>}
+              {recentNotes.length === 0 && <p className="py-4 text-[13px] text-muted-foreground">{t("No notes yet.")}</p>}
               {recentNotes.map((n) => (
                 <Link key={n.id} href={`/notes?id=${n.id}`} className="rounded-lg border bg-background/60 p-3 transition-colors hover:border-primary/25">
                   <p className="flex items-center gap-1.5 truncate text-[13px] font-medium">
@@ -153,15 +153,15 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                <CalendarClock className="size-4 text-amber-600" /> Upcoming reminders
+                <CalendarClock className="size-4 text-amber-600" /> {t("Upcoming reminders")}
               </CardTitle>
               <Button variant="ghost" size="xs" onClick={() => open({ type: "reminder" })}>
-                <Plus /> Add
+                <Plus /> {t("Add")}
               </Button>
             </CardHeader>
             <CardContent className="px-3">
               {upcomingReminders.length === 0 ? (
-                <p className="px-2 py-4 text-[13px] text-muted-foreground">No reminders in the next 7 days.</p>
+                <p className="px-2 py-4 text-[13px] text-muted-foreground">{t("No reminders in the next 7 days.")}</p>
               ) : (
                 upcomingReminders.map((r) => <ReminderRow key={r.id} reminder={r} />)
               )}
@@ -171,15 +171,15 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                <CheckCircle2 className="size-4 text-rose-600" /> Upcoming commitments
+                <CheckCircle2 className="size-4 text-rose-600" /> {t("Upcoming commitments")}
               </CardTitle>
               <Link href="/calendar" className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground">
-                Calendar <ArrowRight className="size-3" />
+                {t("Calendar")} <ArrowRight className="size-3" />
               </Link>
             </CardHeader>
             <CardContent className="px-3">
               {commitments.length === 0 ? (
-                <p className="px-2 py-4 text-[13px] text-muted-foreground">No events or important deadlines this week.</p>
+                <p className="px-2 py-4 text-[13px] text-muted-foreground">{t("No events or important deadlines this week.")}</p>
               ) : (
                 commitments.map((c) =>
                   c.kind === "event" ? (
@@ -197,14 +197,14 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                <Lightbulb className="size-4 text-violet-600" /> Latest ideas
+                <Lightbulb className="size-4 text-violet-600" /> {t("Latest ideas")}
               </CardTitle>
               <Link href="/ideas" className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground">
-                All ideas <ArrowRight className="size-3" />
+                {t("All ideas")} <ArrowRight className="size-3" />
               </Link>
             </CardHeader>
             <CardContent className="grid gap-1">
-              {recentIdeas.length === 0 && <p className="py-2 text-[13px] text-muted-foreground">No ideas yet — they&apos;ll show up here.</p>}
+              {recentIdeas.length === 0 && <p className="py-2 text-[13px] text-muted-foreground">{t("No ideas yet — they'll show up here.")}</p>}
               {recentIdeas.map((i) => (
                 <button key={i.id} onClick={() => open({ type: "idea", editing: i })} className="rounded-md px-2 py-1.5 text-left hover:bg-muted/60">
                   <p className="truncate text-[13px] font-medium">{i.title}</p>

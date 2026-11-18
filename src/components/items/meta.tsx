@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { Bell, CalendarDays, CheckCircle2, Flag, Lightbulb, Sparkles, StickyNote, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,11 @@ export const KIND_META: Record<CaptureKind, { label: string; icon: LucideIcon; t
   event: { label: "Event", icon: CalendarDays, tint: "text-rose-600 bg-rose-50" },
 };
 
+export function useKindLabel() {
+  const { t } = useT();
+  return (k: CaptureKind) => t(KIND_META[k].label);
+}
+
 export function KindIcon({ kind, className }: { kind: CaptureKind; className?: string }) {
   const m = KIND_META[kind];
   const Icon = m.icon;
@@ -46,11 +52,12 @@ const PRIORITY_STYLE: Record<Priority, { label: string; cls: string }> = {
 export const PRIORITIES: Priority[] = ["urgent", "high", "medium", "low"];
 
 export function PriorityFlag({ priority, showLabel }: { priority: Priority; showLabel?: boolean }) {
+  const { t } = useT();
   const p = PRIORITY_STYLE[priority];
   return (
-    <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", p.cls)} title={`${p.label} priority`}>
+    <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", p.cls)} title={t("{p} priority", { p: t(p.label) })}>
       <Flag className="size-3" fill={priority === "urgent" || priority === "high" ? "currentColor" : "none"} />
-      {showLabel && p.label}
+      {showLabel && t(p.label)}
     </span>
   );
 }
@@ -71,29 +78,31 @@ export function CategoryBadge({ id }: { id: string | null | undefined }) {
 }
 
 export function AiBadge({ source, label = "AI" }: { source?: ItemSource; label?: string }) {
+  const { t } = useT();
   if (source && source !== "ai") return null;
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[10px] font-medium text-primary/80 ring-1 ring-primary/15">
           <Sparkles className="size-2.5" />
-          {label}
+          {t(label)}
         </span>
       </TooltipTrigger>
-      <TooltipContent>Created from AI capture and approved by you</TooltipContent>
+      <TooltipContent>{t("Created from AI capture and approved by you")}</TooltipContent>
     </Tooltip>
   );
 }
 
 export function SimulatedBadge({ className }: { className?: string }) {
+  const { t } = useT();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Badge variant="warning" className={cn("cursor-help", className)}>
-          <Sparkles /> Simulated AI
+          <Sparkles /> {t("Simulated AI")}
         </Badge>
       </TooltipTrigger>
-      <TooltipContent>No OpenAI key configured (or the AI service failed). This result comes from DYBYSTA&apos;s built-in rule-based parser.</TooltipContent>
+      <TooltipContent>{t("No OpenAI key configured (or the AI service failed). This result comes from DYBYSTA's built-in rule-based parser.")}</TooltipContent>
     </Tooltip>
   );
 }

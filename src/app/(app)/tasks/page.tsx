@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { addDays, endOfWeek } from "date-fns";
@@ -48,6 +49,7 @@ function TasksPageInner() {
   const { open } = useDialogs();
   const params = useSearchParams();
   const now = useNow(60_000);
+  const { t } = useT();
   const [view, setView] = React.useState<"list" | "calendar">("list");
   const [query, setQuery] = React.useState("");
   const [status, setStatus] = React.useState<StatusFilter>(params.get("filter") === "overdue" ? "overdue" : "active");
@@ -94,22 +96,22 @@ function TasksPageInner() {
   return (
     <div>
       <PageHeader
-        title="Tasks"
-        description={`${tasks.filter((t) => t.status !== "done").length} open · ${tasks.filter((t) => isTaskOverdue(t, now)).length} overdue`}
+        title={t("Tasks")}
+        description={t("{open} open · {overdue} overdue", { open: tasks.filter((x) => x.status !== "done").length, overdue: tasks.filter((x) => isTaskOverdue(x, now)).length })}
         actions={
           <>
             <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")}>
               <TabsList>
                 <TabsTrigger value="list">
-                  <List /> List
+                  <List /> {t("List")}
                 </TabsTrigger>
                 <TabsTrigger value="calendar">
-                  <CalendarDays /> Calendar
+                  <CalendarDays /> {t("Calendar")}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
             <Button size="sm" onClick={() => open({ type: "task" })}>
-              <Plus /> New task
+              <Plus /> {t("New task")}
             </Button>
           </>
         }
@@ -118,51 +120,51 @@ function TasksPageInner() {
       {view === "calendar" ? (
         <div className="grid gap-3">
           <div className="flex justify-end">
-            <CategorySelect allLabel="All categories" value={category} onChange={setCategory} size="sm" className="w-44" />
+            <CategorySelect allLabel={t("All categories")} value={category} onChange={setCategory} size="sm" className="w-44" />
           </div>
           <CalendarView kinds={["task"]} categoryId={category} />
-          <p className="text-[12px] text-muted-foreground">Tasks without a due date aren&apos;t shown in the calendar. Use + on a day to add one.</p>
+          <p className="text-[12px] text-muted-foreground">{t("Tasks without a due date aren't shown in the calendar. Use + on a day to add one.")}</p>
         </div>
       ) : (
         <>
           <div className="mb-5 flex flex-wrap items-center gap-2">
             <div className="relative min-w-[200px] flex-1">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tasks…" className="h-8 pl-8 text-[13px]" aria-label="Search tasks" />
+              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search tasks…")} className="h-8 pl-8 text-[13px]" aria-label={t("Search tasks")} />
             </div>
             <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
-              <SelectTrigger size="sm" className="w-32" aria-label="Status filter">
+              <SelectTrigger size="sm" className="w-32" aria-label={t("Status filter")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-                <SelectItem value="done">Completed</SelectItem>
-                <SelectItem value="all">All tasks</SelectItem>
+                <SelectItem value="active">{t("Active")}</SelectItem>
+                <SelectItem value="overdue">{t("Overdue")}</SelectItem>
+                <SelectItem value="done">{t("Completed")}</SelectItem>
+                <SelectItem value="all">{t("All tasks")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={priority} onValueChange={(v) => setPriority(v as Priority | "all")}>
-              <SelectTrigger size="sm" className="w-36" aria-label="Priority filter">
+              <SelectTrigger size="sm" className="w-36" aria-label={t("Priority filter")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Any priority</SelectItem>
+                <SelectItem value="all">{t("Any priority")}</SelectItem>
                 {PRIORITIES.map((p) => (
                   <SelectItem key={p} value={p}>
-                    {priorityLabel(p)}
+                    {t(priorityLabel(p))}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <CategorySelect allLabel="All categories" value={category} onChange={setCategory} size="sm" className="w-40" />
+            <CategorySelect allLabel={t("All categories")} value={category} onChange={setCategory} size="sm" className="w-40" />
             <Select value={sort} onValueChange={(v) => setSort(v as SortBy)}>
-              <SelectTrigger size="sm" className="w-36" aria-label="Sort">
+              <SelectTrigger size="sm" className="w-36" aria-label={t("Sort")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="due">Sort: Due date</SelectItem>
-                <SelectItem value="priority">Sort: Priority</SelectItem>
-                <SelectItem value="created">Sort: Newest</SelectItem>
+                <SelectItem value="due">{t("Sort: Due date")}</SelectItem>
+                <SelectItem value="priority">{t("Sort: Priority")}</SelectItem>
+                <SelectItem value="created">{t("Sort: Newest")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -170,23 +172,23 @@ function TasksPageInner() {
           {sorted.length === 0 ? (
             <EmptyState
               icon={CheckCircle2}
-              title={tasks.length ? "No tasks match these filters" : "No tasks yet"}
-              description={tasks.length ? "Try clearing the search or changing filters." : "Create a task, or use Quick capture to add one by voice."}
+              title={tasks.length ? t("No tasks match these filters") : t("No tasks yet")}
+              description={tasks.length ? t("Try clearing the search or changing filters.") : t("Create a task, or use Quick capture to add one by voice.")}
               action={
                 <Button size="sm" onClick={() => open({ type: "task" })}>
-                  <Plus /> New task
+                  <Plus /> {t("New task")}
                 </Button>
               }
             />
           ) : grouped ? (
             <div className="grid gap-5">
-              <Group title="Overdue" tasks={groups.overdue} tone="text-destructive" />
-              <Group title="Today" tasks={groups.today} />
-              <Group title="Tomorrow" tasks={groups.tomorrow} />
-              <Group title="This week" tasks={groups.week} />
-              <Group title="Later" tasks={groups.later} />
-              <Group title="No due date" tasks={groups.nodate} />
-              <Group title="Completed" tasks={groups.done} defaultOpen={status === "done"} />
+              <Group title={t("Overdue")} tasks={groups.overdue} tone="text-destructive" />
+              <Group title={t("Today")} tasks={groups.today} />
+              <Group title={t("Tomorrow")} tasks={groups.tomorrow} />
+              <Group title={t("This week")} tasks={groups.week} />
+              <Group title={t("Later")} tasks={groups.later} />
+              <Group title={t("No due date")} tasks={groups.nodate} />
+              <Group title={t("Completed")} tasks={groups.done} defaultOpen={status === "done"} />
             </div>
           ) : (
             <div className="rounded-xl border bg-card p-1.5">

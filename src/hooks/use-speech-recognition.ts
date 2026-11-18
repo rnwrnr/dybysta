@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import type { VoiceLanguage } from "@/lib/types";
 
@@ -38,6 +39,9 @@ const ERRORS: Record<string, string> = {
 };
 
 export function useSpeechRecognition(opts: { lang: VoiceLanguage; onFinal: (text: string) => void }) {
+  const { t } = useT();
+  const tRef = React.useRef(t);
+  tRef.current = t;
   const [supported, setSupported] = React.useState(false);
   const [listening, setListening] = React.useState(false);
   const [interim, setInterim] = React.useState("");
@@ -57,7 +61,7 @@ export function useSpeechRecognition(opts: { lang: VoiceLanguage; onFinal: (text
   const start = React.useCallback(() => {
     const C = getCtor();
     if (!C) {
-      setError("Voice input isn't supported in this browser. Try Chrome, Edge or Safari.");
+      setError(tRef.current("Voice input isn't supported in this browser. Try Chrome, Edge or Safari."));
       return;
     }
     recRef.current?.abort();
@@ -81,7 +85,7 @@ export function useSpeechRecognition(opts: { lang: VoiceLanguage; onFinal: (text
     };
     rec.onerror = (e) => {
       if (e.error === "aborted") return;
-      setError(ERRORS[e.error] ?? `Voice input error: ${e.error}`);
+      setError(ERRORS[e.error] ? tRef.current(ERRORS[e.error]) : tRef.current("Voice input error: {e}", { e: e.error }));
       if (e.error !== "no-speech") wantRef.current = false;
     };
     rec.onend = () => {
@@ -102,7 +106,7 @@ export function useSpeechRecognition(opts: { lang: VoiceLanguage; onFinal: (text
     try {
       rec.start();
     } catch {
-      setError("Couldn't start the microphone. Please try again.");
+      setError(tRef.current("Couldn't start the microphone. Please try again."));
       wantRef.current = false;
     }
   }, [opts.lang]);

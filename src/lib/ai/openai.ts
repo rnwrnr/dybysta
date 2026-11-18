@@ -1,5 +1,6 @@
 import "server-only";
 import OpenAI from "openai";
+import { translate } from "@/lib/i18n/core";
 import type { ExtractedItem } from "@/lib/types";
 import type { AssistantContext } from "./context";
 import type { LocalNow } from "./heuristic-capture";
@@ -52,7 +53,7 @@ const CAPTURE_SCHEMA = {
   },
 } as const;
 
-function captureSystemPrompt(now: LocalNow, weekday: string, categories: string[]) {
+function captureSystemPrompt(now: LocalNow, weekday: string, categories: string[], uiLang: "en" | "ru") {
   return `You are DYBYSTA, a careful personal organization assistant. Convert the user's message into structured items.
 
 Current local date: ${now.date} (${weekday}), local time ${now.time}.
@@ -79,7 +80,7 @@ STRICT RULES — the user stays the boss:
 11. tags: only hashtags or explicit tags the user wrote; otherwise [].
 12. repeat: for reminders only ("every day" → daily). Else null.
 13. Split into multiple items only if the user clearly listed separate things.
-14. Write interpretations and clarifications in the user's language.`;
+14. Write interpretations and clarifications in ${uiLang === "ru" ? "Russian" : "English"} (the user's interface language). Keep titles in the language the user wrote them.`;
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -94,7 +95,7 @@ function containsLoose(text: string, needle: string | null) {
 }
 
 /** Server-side guard: drop any detail the model can't justify with the user's own words. */
-function enforceNoFabrication(raw: RawItem, text: string): ExtractedItem {
+function enforceNoFabrication(raw: RawItem, text: string, uiLang: "en" | "ru"): ExtractedItem {
   const item: ExtractedItem = {
     kind: raw.kind,
     title: (raw.title || text).slice(0, 300),
@@ -112,11 +113,11 @@ function enforceNoFabrication(raw: RawItem, text: string): ExtractedItem {
   };
   if (item.date && (!DATE_RE.test(item.date) || !containsLoose(text, raw.date_evidence))) {
     item.date = null;
-    item.clarifications.push("Which day should this be? (The AI couldn't confirm a date from your words.)");
+    item.clarifications.push(translate(uiLang, "Which day should this be? (The AI couldn't confirm a date from your words.)"));
   }
   if (item.time && (!TIME_RE.test(item.time) || !containsLoose(text, raw.time_evidence))) {
     item.time = null;
-    if (item.kind === "reminder" || item.kind === "event") item.clarifications.push("What time? (The AI couldn't confirm a time from your words.)");
+    if (item.kind === "reminder" || item.kind === "event") item.clarifications.push(translate(uiLang, "What time? (The AI couldn't confirm a time from your words.)"));
   }
   if (item.end_time && !TIME_RE.test(item.end_time)) item.end_time = null;
   if (item.priority && !containsLoose(text, raw.priority_evidence)) item.priority = null;
@@ -124,12 +125,12 @@ function enforceNoFabrication(raw: RawItem, text: string): ExtractedItem {
   return item;
 }
 
-export async function openaiCapture(text: string, now: LocalNow, weekday: string, categories: string[]): Promise<ExtractedItem[]> {
+export async function openaiCapture(text: string, now: LocalNow, weekday: string, categories: string[], uiLang: "en" | "ru" = "en"): Promise<ExtractedItem[]> {
   const res = await getClient().chat.completions.create({
     model: OPENAI_MODEL,
     temperature: 0.1,
     messages: [
-      { role: "system", content: captureSystemPrompt(now, weekday, categories) },
+      { role: "system", content: captureSystemPrompt(now, weekday, categories, uiLang) },
       { role: "user", content: text },
     ],
     response_format: { type: "json_schema", json_schema: { name: "capture", strict: true, schema: CAPTURE_SCHEMA as unknown as Record<string, unknown> } },
@@ -137,7 +138,7 @@ export async function openaiCapture(text: string, now: LocalNow, weekday: string
   const content = res.choices[0]?.message?.content;
   if (!content) throw new Error("Empty AI response");
   const parsed = JSON.parse(content) as { items: RawItem[] };
-  return parsed.items.slice(0, 5).map((i) => enforceNoFabrication(i, text));
+  return parsed.items.slice(0, 5).map((i) => enforceNoFabrication(i, text, uiLang));
 }
 
 const ASSISTANT_SCHEMA = {

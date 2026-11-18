@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { Bell, CalendarDays, CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ const TOGGLES: { kind: CalKind; label: string; icon: React.ElementType; on: stri
 
 export default function CalendarPage() {
   const { open } = useDialogs();
+  const { t } = useT();
   const [kinds, setKinds] = React.useState<CalKind[]>(["event", "task", "reminder"]);
   const [category, setCategory] = React.useState<string | null>(null);
   const toggle = (k: CalKind) => setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : [...ks, k]));
@@ -23,30 +25,30 @@ export default function CalendarPage() {
   return (
     <div>
       <PageHeader
-        title="Calendar"
-        description="Tasks, events and reminders in one place. Hover a day and press + to add."
+        title={t("Calendar")}
+        description={t("Tasks, events and reminders in one place. Hover a day and press + to add.")}
         actions={
           <Button size="sm" onClick={() => open({ type: "event" })}>
-            <Plus /> New event
+            <Plus /> {t("New event")}
           </Button>
         }
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        {TOGGLES.map((t) => {
-          const active = kinds.includes(t.kind);
+        {TOGGLES.map((tg) => {
+          const active = kinds.includes(tg.kind);
           return (
             <button
-              key={t.kind}
-              onClick={() => toggle(t.kind)}
+              key={tg.kind}
+              onClick={() => toggle(tg.kind)}
               aria-pressed={active}
-              className={cn("inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[12.5px] font-medium transition-colors", active ? t.on : "bg-card text-muted-foreground hover:text-foreground")}
+              className={cn("inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[12.5px] font-medium transition-colors", active ? tg.on : "bg-card text-muted-foreground hover:text-foreground")}
             >
-              <t.icon className="size-3.5" /> {t.label}
+              <tg.icon className="size-3.5" /> {t(tg.label)}
             </button>
           );
         })}
         <div className="ml-auto">
-          <CategorySelect allLabel="All categories" value={category} onChange={setCategory} size="sm" className="w-44" />
+          <CategorySelect allLabel={t("All categories")} value={category} onChange={setCategory} size="sm" className="w-44" />
         </div>
       </div>
       <CalendarView kinds={kinds} categoryId={category} />

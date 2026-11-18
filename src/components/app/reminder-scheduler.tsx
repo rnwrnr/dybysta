@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { toast } from "sonner";
 import { inQuietHours, isReminderDue } from "@/lib/dates";
@@ -32,6 +33,9 @@ function beep() {
 export function ReminderScheduler() {
   const { reminders, preferences, update, loading } = useData();
   const actions = useReminderActions();
+  const { t } = useT();
+  const tRef = React.useRef(t);
+  tRef.current = t;
   const fired = React.useRef(new Set<string>());
   const stateRef = React.useRef({ reminders, preferences, actions });
   stateRef.current = { reminders, preferences, actions };
@@ -39,22 +43,23 @@ export function ReminderScheduler() {
   const notify = React.useCallback(
     (r: Reminder) => {
       const { preferences: p, actions: a } = stateRef.current;
+      const t = tRef.current;
       update("reminders", r.id, { last_notified_at: new Date().toISOString() }, { silent: true });
       if (!p.notifications_enabled) return;
       const quiet = p.quiet_hours_enabled && inQuietHours(p.quiet_hours_start, p.quiet_hours_end);
       if (quiet) return; // stays visible in the notification center
       toast(r.title, {
         id: `reminder-${r.id}`,
-        description: r.description ?? "Reminder",
+        description: r.description ?? t("Reminder"),
         duration: 30_000,
         icon: "🔔",
-        action: { label: `Snooze ${p.default_snooze_minutes}m`, onClick: () => a.snooze(r, p.default_snooze_minutes) },
-        cancel: { label: "Dismiss", onClick: () => a.dismiss(r) },
+        action: { label: t("Snooze {n} min", { n: p.default_snooze_minutes }), onClick: () => a.snooze(r, p.default_snooze_minutes) },
+        cancel: { label: t("Dismiss"), onClick: () => a.dismiss(r) },
       });
       if (p.notification_sound) beep();
       if (p.browser_notifications && typeof Notification !== "undefined" && Notification.permission === "granted" && document.visibilityState !== "visible") {
         try {
-          const n = new Notification(r.title, { body: r.description ?? "DYBYSTA reminder", tag: r.id, icon: "/icon.svg" });
+          const n = new Notification(r.title, { body: r.description ?? t("DYBYSTA reminder"), tag: r.id, icon: "/icon.svg" });
           n.onclick = () => {
             window.focus();
             n.close();

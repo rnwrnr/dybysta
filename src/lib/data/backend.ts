@@ -1,3 +1,4 @@
+import type { Lang } from "@/lib/i18n/core";
 import type { Category, Profile, TableMap, TableName, UserPreferences } from "@/lib/types";
 
 export interface Snapshot {
@@ -25,6 +26,7 @@ export interface DataBackend {
 }
 
 export const DEFAULT_PREFERENCES: Omit<UserPreferences, "user_id"> = {
+  ui_language: "en",
   voice_language: "en-US",
   ai_language: "auto",
   timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC",
@@ -40,12 +42,17 @@ export const DEFAULT_PREFERENCES: Omit<UserPreferences, "user_id"> = {
   ai_suggestions_enabled: true,
 };
 
-export const DEFAULT_CATEGORIES: { name: string; color: string }[] = [
-  { name: "Work", color: "blue" },
-  { name: "Personal", color: "violet" },
-  { name: "Study", color: "amber" },
-  { name: "Health", color: "green" },
-  { name: "Finance", color: "rose" },
+const CATEGORY_DEFS = [
+  { key: "Work", ru: "Работа", color: "blue" },
+  { key: "Personal", ru: "Личное", color: "violet" },
+  { key: "Study", ru: "Учёба", color: "amber" },
+  { key: "Health", ru: "Здоровье", color: "green" },
+  { key: "Finance", ru: "Финансы", color: "rose" },
 ];
+
+/** Default categories, named in the user's language. `key` is the stable English name. */
+export function defaultCategories(lang: Lang) {
+  return CATEGORY_DEFS.map((c) => ({ key: c.key, name: lang === "ru" ? c.ru : c.key, color: c.color }));
+}
 
 export const USER_TABLES: TableName[] = ["tasks", "reminders", "notes", "ideas", "events", "categories"];

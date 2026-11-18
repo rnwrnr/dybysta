@@ -4,12 +4,14 @@ import type { AssistantContext } from "@/lib/ai/context";
 import { guardAiRequest } from "@/lib/ai/guard";
 import { heuristicAssistant } from "@/lib/ai/heuristic-assistant";
 import { isOpenAIConfigured, openaiAssistant } from "@/lib/ai/openai";
+import { translate } from "@/lib/i18n/core";
 import type { CaptureKind } from "@/lib/types";
 
 const Body = z.object({
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) })).min(1).max(30),
   context: z.custom<AssistantContext>((v) => typeof v === "object" && v !== null && "now" in v && "tasks" in v),
   language: z.enum(["auto", "en", "ru"]).default("auto"),
+  uiLanguage: z.enum(["en", "ru"]).default("en"),
 });
 
 function refsFor(ids: string[], ctx: AssistantContext) {
@@ -34,6 +36,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const question = [...body.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+  // "auto" answers in the language of the question.
+  const answerLang = body.language === "auto" ? (/[а-яё]/i.test(question) ? "ru" : /[a-z]/i.test(question) ? "en" : body.uiLanguage) : body.language;
 
   if (isOpenAIConfigured()) {
     try {
@@ -41,9 +45,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ answer, references: refsFor(referenceIds, body.context), simulated: false });
     } catch (e) {
       console.error("[assistant] OpenAI failed, falling back", e);
-      const r = heuristicAssistant(question, body.context);
-      return NextResponse.json({ ...r, simulated: true, error: "The AI service is unavailable — this answer comes from the offline search." });
+      const r = heuristicAssistant(question, body.context, answerLang);
+      return NextResponse.json({ ...r, simulated: true, error: translate(body.uiLanguage, "The AI service is unavailable — this answer comes from the offline search.") });
     }
   }
-  return NextResponse.json({ ...heuristicAssistant(question, body.context), simulated: true });
+  return NextResponse.json({ ...heuristicAssistant(question, body.context, answerLang), simulated: true });
 }

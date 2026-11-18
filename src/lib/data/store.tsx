@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/provider";
 import * as React from "react";
 import { toast } from "sonner";
 import { isSupabaseConfigured } from "@/lib/config";
@@ -51,6 +52,9 @@ const LABELS: Record<TableName, string> = {
 };
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useT();
+  const tRef = React.useRef(t);
+  tRef.current = t;
   const backend = React.useMemo<DataBackend>(() => (isSupabaseConfigured ? new SupabaseBackend() : new DemoBackend()), []);
   const [data, setData] = React.useState<Snapshot>(EMPTY);
   const [loading, setLoading] = React.useState(true);
@@ -63,7 +67,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const snap = await backend.load();
       setData(snap);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load your data.");
+      setError(e instanceof Error ? e.message : tRef.current("Could not load your data."));
     } finally {
       setLoading(false);
     }
@@ -82,10 +86,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       try {
         const saved = await backend.insert(table, row);
         setData((d) => ({ ...d, [table]: [saved, ...(d[table] as unknown[])] }));
-        if (!opts?.silent) toast.success(`${LABELS[table]} saved`);
+        if (!opts?.silent) toast.success(tRef.current("{kind} saved", { kind: tRef.current(LABELS[table]) }));
         return saved;
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not save");
+        toast.error(e instanceof Error ? e.message : tRef.current("Could not save"));
         return null;
       }
     },
@@ -103,11 +107,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       try {
         const saved = await backend.update(table, id, patch);
         setData((d) => ({ ...d, [table]: (d[table] as { id: string }[]).map((r) => (r.id === id ? saved : r)) }));
-        if (!opts?.silent) toast.success(`${LABELS[table]} updated`);
+        if (!opts?.silent) toast.success(tRef.current("{kind} updated", { kind: tRef.current(LABELS[table]) }));
         return saved;
       } catch (e) {
         if (previous) setData(previous);
-        toast.error(e instanceof Error ? e.message : "Could not update");
+        toast.error(e instanceof Error ? e.message : tRef.current("Could not update"));
         return null;
       }
     },
@@ -131,11 +135,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       });
       try {
         await backend.remove(table, id);
-        if (!opts?.silent) toast.success(`${opts?.label ?? LABELS[table]} deleted`);
+        if (!opts?.silent) toast.success(tRef.current("{kind} deleted", { kind: opts?.label ?? tRef.current(LABELS[table]) }));
         return true;
       } catch (e) {
         if (previous) setData(previous);
-        toast.error(e instanceof Error ? e.message : "Could not delete");
+        toast.error(e instanceof Error ? e.message : tRef.current("Could not delete"));
         return false;
       }
     },
@@ -149,7 +153,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setData((d) => ({ ...d, preferences: { ...d.preferences, ...p } }));
         return true;
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not save settings");
+        toast.error(e instanceof Error ? e.message : tRef.current("Could not save settings"));
         return false;
       }
     },
@@ -163,7 +167,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setData((d) => ({ ...d, profile: p }));
         return true;
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not save profile");
+        toast.error(e instanceof Error ? e.message : tRef.current("Could not save profile"));
         return false;
       }
     },
