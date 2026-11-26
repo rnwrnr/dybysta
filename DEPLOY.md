@@ -11,6 +11,7 @@ Skip this for a pure demo: without Supabase every visitor gets a private demo st
 2. **SQL Editor** → **New query** → paste the whole contents of `supabase/setup.sql` → **Run**. (It is the three migrations combined.)
 3. **Project Settings → API**: copy the **Project URL** and the **anon public** key.
 4. **Authentication → URL Configuration**: set **Site URL** to your live URL (from step 3) and add `https://YOUR-DOMAIN/auth/callback` to **Redirect URLs**.
+   Also add `https://YOUR-DOMAIN/**` to **Redirect URLs** so password-reset links work.
    For a quick launch you can turn off "Confirm email" in **Authentication → Providers → Email** so people can sign in immediately.
 
 ## 3. Deploy on Vercel — 10 min

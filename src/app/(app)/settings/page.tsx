@@ -187,6 +187,13 @@ export default function SettingsPage() {
           <Row title={t("Email")} description={mode === "demo" ? t("Demo accounts don't have an email.") : t("Your sign-in email.")}>
             <span className="text-[14.5px] text-muted-foreground">{mode === "demo" ? "—" : profile.email}</span>
           </Row>
+          {mode === "supabase" && (
+            <Row title={t("Password")} description={t("Change the password you use to sign in.")}>
+              <Button size="sm" variant="outline" onClick={() => router.push("/reset-password")}>
+                {t("Change password")}
+              </Button>
+            </Row>
+          )}
         </Section>
 
         <Section id="language" icon={Globe} title={t("Language")} description={t("Interface, voice recognition and AI response language.")}>

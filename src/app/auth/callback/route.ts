@@ -8,7 +8,10 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await getSupabaseServer();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next.startsWith("/") ? next : "/dashboard"}`);
+    // Only allow same-site relative paths (no "//evil.com" open redirects).
+    const safe = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    if (!error) return NextResponse.redirect(`${origin}${safe}`);
   }
-  return NextResponse.redirect(`${origin}/login?error=confirmation_failed`);
+  const failed = next.startsWith("/reset-password") ? "/forgot-password?error=expired" : "/login?error=confirmation_failed";
+  return NextResponse.redirect(`${origin}${failed}`);
 }

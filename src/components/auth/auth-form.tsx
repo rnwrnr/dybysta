@@ -130,7 +130,14 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="password">{t("Password")}</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">{t("Password")}</Label>
+              {mode === "login" && (
+                <Link href="/forgot-password" className="text-[13.5px] font-medium text-primary hover:underline">
+                  {t("Forgot password?")}
+                </Link>
+              )}
+            </div>
             <Input
               id="password"
               type="password"
