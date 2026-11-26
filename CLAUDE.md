@@ -20,7 +20,7 @@ Next.js 15 (App Router) + TypeScript + Tailwind v4 + shadcn/ui-style components 
 - `src/app/api/ai/` — `agent`, `transcribe` (OpenAI-compatible speech-to-text), `overview`, `status`, plus older `capture`/`assistant`.
 - `src/hooks/use-voice-input.ts` — records audio → `/api/ai/transcribe` when an AI key exists, else browser speech recognition.
 - `src/lib/i18n/` — translations keyed by English text; Russian in `ru.ts`. Components use `const { t } = useT()`. Add a Russian entry for every new UI string.
-- `supabase/setup.sql` — whole database in one file (= migrations 0001–0003). New schema changes: add `0004_...sql` AND update `setup.sql`.
+- `supabase/setup.sql` — whole database in one file (= migrations 0001–0004). New schema changes: add `0005_...sql` AND update `setup.sql`. Newer Supabase projects need explicit GRANTs (see 0004) — include grants for any new table.
 - `DEPLOY.md` — launch steps for the owner.
 
 ## Deployment (live)

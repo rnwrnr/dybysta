@@ -1,5 +1,5 @@
 -- DYBYSTA: complete database setup. Paste this whole file into Supabase → SQL Editor → Run.
--- (Same as running migrations 0001, 0002 and 0003 in order. Safe to run more than once.)
+-- (Same as running migrations 0001–0004 in order. Safe to run more than once.)
 
 -- ===== supabase/migrations/0001_init.sql =====
 -- DYBYSTA initial schema
@@ -303,3 +303,26 @@ end $$;
 -- Allow Kazakh voice recognition in the browser fallback.
 alter table public.user_preferences drop constraint if exists user_preferences_voice_language_check;
 alter table public.user_preferences add constraint user_preferences_voice_language_check check (voice_language in ('en-US', 'ru-RU', 'kk-KZ'));
+
+-- ===== supabase/migrations/0004_grants.sql =====
+-- Newer Supabase projects don't automatically grant table access to the API roles.
+-- Signed-in users get access to the app tables; Row Level Security still limits
+-- every user to their own rows.
+
+grant usage on schema public to anon, authenticated;
+
+grant select, insert, update, delete on table
+  public.profiles,
+  public.user_preferences,
+  public.categories,
+  public.tasks,
+  public.reminders,
+  public.notes,
+  public.ideas,
+  public.events
+to authenticated;
+
+grant execute on function public.delete_my_account() to authenticated;
+
+-- Tables added later get the same access.
+alter default privileges in schema public grant select, insert, update, delete on tables to authenticated;
