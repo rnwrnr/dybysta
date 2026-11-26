@@ -9,12 +9,17 @@ function fail(error: { message: string } | null, context: string): never {
   throw new Error(`${t(context)}: ${error?.message ?? "unknown error"}`);
 }
 
-/** Converts empty strings to null for nullable DB columns so Postgres accepts them. */
-function clean<T extends Record<string, unknown>>(row: T): T {
+/** Text columns that are NOT NULL in the database — an empty string must stay "" there. */
+const REQUIRED_TEXT = new Set(["title", "content", "name", "color"]);
+
+/** Converts empty strings to null for optional DB columns (e.g. a cleared date or location) so Postgres accepts them. */
+export function clean<T extends Record<string, unknown>>(row: T): T {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(row)) {
     if (k === "id" || k === "user_id" || k === "created_at" || k === "updated_at") continue;
-    out[k] = v === "" ? null : v;
+    if (v === "" && REQUIRED_TEXT.has(k)) out[k] = "";
+    else if (v === null && k === "content") out[k] = "";
+    else out[k] = v === "" ? null : v;
   }
   return out as T;
 }
