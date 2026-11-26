@@ -16,4 +16,5 @@ export interface AgentResponse {
   actions: AgentAction[];
   simulated: boolean;
   error?: string;
+  model?: string;
 }

@@ -19,8 +19,8 @@ interface DataContextValue extends Snapshot {
   error: string | null;
   ai: AiStatus;
   reload(): Promise<void>;
-  create<T extends TableName>(table: T, row: Partial<TableMap[T]>, opts?: { silent?: boolean }): Promise<TableMap[T] | null>;
-  update<T extends TableName>(table: T, id: string, patch: Partial<TableMap[T]>, opts?: { silent?: boolean }): Promise<TableMap[T] | null>;
+  create<T extends TableName>(table: T, row: Partial<TableMap[T]>, opts?: { silent?: boolean; onError?: (msg: string) => void }): Promise<TableMap[T] | null>;
+  update<T extends TableName>(table: T, id: string, patch: Partial<TableMap[T]>, opts?: { silent?: boolean; onError?: (msg: string) => void }): Promise<TableMap[T] | null>;
   remove(table: TableName, id: string, opts?: { silent?: boolean; label?: string }): Promise<boolean>;
   savePreferences(patch: Partial<UserPreferences>): Promise<boolean>;
   saveProfile(patch: Partial<Profile>): Promise<boolean>;
@@ -89,7 +89,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (!opts?.silent) toast.success(tRef.current("{kind} saved", { kind: tRef.current(LABELS[table]) }));
         return saved;
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : tRef.current("Could not save"));
+        const msg = e instanceof Error ? e.message : tRef.current("Could not save");
+        toast.error(msg);
+        opts?.onError?.(msg);
         return null;
       }
     },
@@ -111,7 +113,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         return saved;
       } catch (e) {
         if (previous) setData(previous);
-        toast.error(e instanceof Error ? e.message : tRef.current("Could not update"));
+        const msg = e instanceof Error ? e.message : tRef.current("Could not update");
+        toast.error(msg);
+        opts?.onError?.(msg);
         return null;
       }
     },

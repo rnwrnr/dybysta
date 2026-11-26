@@ -5,7 +5,7 @@ import { runOpenAIAgent } from "@/lib/ai/agent-openai";
 import type { AgentResponse } from "@/lib/ai/agent-types";
 import type { AssistantContext } from "@/lib/ai/context";
 import { guardAiRequest } from "@/lib/ai/guard";
-import { isOpenAIConfigured } from "@/lib/ai/openai";
+import { isOpenAIConfigured, shortError } from "@/lib/ai/openai";
 import { translate } from "@/lib/i18n/core";
 
 export const maxDuration = 60;
@@ -33,11 +33,15 @@ export async function POST(req: Request) {
   if (isOpenAIConfigured()) {
     try {
       const r = await runOpenAIAgent({ history: body.messages, ctx: body.context, categories: body.categories, focus: body.focus, lang: body.language });
-      return NextResponse.json({ reply: r.reply || translate(body.language, "Done."), actions: r.actions, simulated: false } satisfies AgentResponse);
+      return NextResponse.json({ reply: r.reply || translate(body.language, "Done."), actions: r.actions, simulated: false, model: r.model } satisfies AgentResponse);
     } catch (e) {
       console.error("[agent] OpenAI failed, falling back", e);
       const r = heuristicAgent(last, body.context, body.categories, body.focus, body.language);
-      return NextResponse.json({ ...r, simulated: true, error: translate(body.language, "The AI service is unavailable right now, so this result comes from the offline parser. Please double-check it.") } satisfies AgentResponse);
+      return NextResponse.json({
+        ...r,
+        simulated: true,
+        error: `${translate(body.language, "The AI service is unavailable right now, so this result comes from the offline parser. Please double-check it.")} (${shortError(e)})`,
+      } satisfies AgentResponse);
     }
   }
   return NextResponse.json({ ...heuristicAgent(last, body.context, body.categories, body.focus, body.language), simulated: true } satisfies AgentResponse);

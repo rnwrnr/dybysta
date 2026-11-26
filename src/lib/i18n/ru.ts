@@ -614,4 +614,10 @@ export const RU: Record<string, string | string[]> = {
   "Password updated": "Пароль обновлён",
   "Change the password you use to sign in.": "Смените пароль для входа.",
   "Change password": "Сменить пароль",
+  "Nothing was saved.": "Ничего не сохранено.",
+  "Couldn't save:": "Не удалось сохранить:",
+  "missing title": "нет названия",
+  "missing date or time": "нет даты или времени",
+  "missing date": "нет даты",
+  "item not found": "запись не найдена",
 };

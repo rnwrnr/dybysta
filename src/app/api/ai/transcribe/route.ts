@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI, { toFile } from "openai";
 import { guardAiRequest } from "@/lib/ai/guard";
-import { isOpenAIConfigured } from "@/lib/ai/openai";
+import { isOpenAIConfigured, shortError, transcribeModels } from "@/lib/ai/openai";
 
 export const maxDuration = 60;
 
@@ -27,14 +27,15 @@ export async function POST(req: Request) {
 
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 55_000, maxRetries: 1 });
   const upload = await toFile(Buffer.from(await file.arrayBuffer()), file.name || "audio.webm", { type: file.type || "audio/webm" });
-  const models = [process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-4o-transcribe", "whisper-1"];
-  for (const model of [...new Set(models)]) {
+  let last = "";
+  for (const model of transcribeModels()) {
     try {
       const r = await client.audio.transcriptions.create({ file: upload, model, prompt: PROMPT });
       return NextResponse.json({ text: r.text?.trim() ?? "", model });
     } catch (e) {
       console.error(`[transcribe] ${model} failed`, e);
+      last = shortError(e);
     }
   }
-  return NextResponse.json({ error: "Transcription failed. Please try again." }, { status: 502 });
+  return NextResponse.json({ error: `Transcription failed. Please try again. (${last})` }, { status: 502 });
 }

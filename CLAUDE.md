@@ -26,7 +26,7 @@ Next.js 15 (App Router) + TypeScript + Tailwind v4 + shadcn/ui-style components 
 ## Deployment (live)
 - GitHub: `rnwrnr/dybysta` (private), branch `main`. Vercel auto-deploys every push to `main`.
 - Vercel env vars currently use **Groq** (free) through the OpenAI SDK:
-  `OPENAI_API_KEY=gsk_...`, `OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `OPENAI_MODEL=llama-3.3-70b-versatile`, `OPENAI_TRANSCRIBE_MODEL=whisper-large-v3`,
+  `OPENAI_API_KEY=gsk_...`, `OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `OPENAI_MODEL=openai/gpt-oss-120b`, `OPENAI_TRANSCRIBE_MODEL=whisper-large-v3`,
   plus `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
   To switch to OpenAI later: set `OPENAI_API_KEY=sk-...`, delete `OPENAI_BASE_URL`, `OPENAI_MODEL=gpt-4o-mini`, `OPENAI_TRANSCRIBE_MODEL=gpt-4o-transcribe`, then Redeploy.
 - Supabase: Site URL + Redirect URLs (`/auth/callback` and `/**`) must point to the Vercel domain. "Confirm email" was turned off for launch.

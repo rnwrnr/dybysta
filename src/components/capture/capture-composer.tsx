@@ -62,6 +62,16 @@ function ResultCard({ result, onUndo, onClose }: { result: AgentResult; onUndo: 
         {result.simulated && <SimulatedBadge />}
       </div>
       {result.error && <p className="mt-2 text-[13.5px] text-[oklch(0.45_0.12_60)]">{result.error}</p>}
+      {result.failed.length > 0 && (
+        <div className="mt-3 rounded-xl bg-destructive/8 px-3.5 py-2.5 text-[14px] text-destructive">
+          <p className="font-medium">{t("Couldn't save:")}</p>
+          <ul className="mt-1 list-disc pl-5">
+            {result.failed.map((f, i) => (
+              <li key={i}>{f}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       {visible.length > 0 && (
         <ul className="mt-4 grid gap-1.5">
           {visible.map((c) => {

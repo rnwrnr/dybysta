@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
 import type { AgentAction, AgentFocus, AgentTable } from "./agent-types";
 import type { AssistantContext } from "./context";
-import { OPENAI_MODEL } from "./openai";
+import { chatModels, isModelError } from "./openai";
 
 const str = { type: "string" } as const;
 const opt = (d: string) => ({ type: "string", description: d });
@@ -160,6 +160,19 @@ const TOOLS: ChatCompletionTool[] = [
 
 const TABLE: Record<string, AgentTable> = { task: "tasks", note: "notes", reminder: "reminders", idea: "ideas", event: "events" };
 
+/** Keeps the prompt small enough for free-tier token limits: open/upcoming items and recent notes only. */
+function compact(ctx: AssistantContext): AssistantContext {
+  const today = ctx.now.date;
+  return {
+    ...ctx,
+    tasks: ctx.tasks.filter((t) => t.status !== "done").slice(0, 60).map((t) => ({ ...t, description: t.description?.slice(0, 120) ?? null })),
+    reminders: ctx.reminders.filter((r) => r.status === "pending" || r.status === "snoozed").slice(0, 30),
+    events: ctx.events.filter((e) => e.date >= today).slice(0, 30),
+    notes: ctx.notes.slice(0, 30).map((n) => ({ ...n, content: n.content.slice(0, 300) })),
+    ideas: ctx.ideas.filter((i) => i.status !== "archived").slice(0, 25).map((i) => ({ ...i, description: i.description?.slice(0, 160) ?? null })),
+  };
+}
+
 function systemPrompt(ctx: AssistantContext, categories: { id: string; name: string }[], focus: AgentFocus | null, lang: "en" | "ru") {
   const folders = [...new Set(ctx.notes.map((n) => n.folder).filter(Boolean))];
   return `You are DYBYSTA — a JARVIS-like personal assistant and the user's second brain. You act directly on the user's data by calling tools. You never ask for permission or confirmation: when the user tells you something, you execute it immediately.
@@ -176,13 +189,13 @@ HOW TO BEHAVE
 - To change or delete existing items, use their ids from the data below. Match items by meaning, not exact words.
 - If the user only asks a question, answer it from the data (no tools). Never make up facts that aren't in the data.
 - After acting, reply in ONE or TWO short sentences saying what you did (e.g. "Added a task 'Call professor' for tomorrow 15:00 in Study."). Reply in ${lang === "ru" ? "Russian" : "English"} unless the user clearly wrote in another language.
-${focus ? `\nFOCUS: The user is currently looking at ${focus.type} id=${focus.id}. Their message is an instruction about THIS item — change, add to, or remove from it with update_item (or delete_item if asked). For notes, keep existing content unless told to remove it, and return the full updated content.` : ""}
+${focus ? `\nFOCUS ITEM (full): ${JSON.stringify([...ctx.tasks, ...ctx.notes, ...ctx.ideas, ...ctx.reminders, ...ctx.events].find((x) => x.id === focus.id) ?? null)}\nFOCUS: The user is currently looking at ${focus.type} id=${focus.id}. Their message is an instruction about THIS item — change, add to, or remove from it with update_item (or delete_item if asked). For notes, keep existing content unless told to remove it, and return the full updated content.` : ""}
 
 EXISTING CATEGORIES (id: name): ${categories.map((c) => `${c.id}: ${c.name}`).join(" | ") || "none"}
 EXISTING NOTE FOLDERS: ${folders.join(", ") || "none"}
 
 USER DATA (JSON):
-${JSON.stringify(ctx)}`;
+${JSON.stringify(compact(ctx))}`;
 }
 
 /**
@@ -195,19 +208,36 @@ export async function runOpenAIAgent(opts: {
   categories: { id: string; name: string }[];
   focus: AgentFocus | null;
   lang: "en" | "ru";
-}): Promise<{ reply: string; actions: AgentAction[] }> {
+}): Promise<{ reply: string; actions: AgentAction[]; model: string }> {
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 45_000, maxRetries: 1 });
   const messages: ChatCompletionMessageParam[] = [{ role: "system", content: systemPrompt(opts.ctx, opts.categories, opts.focus, opts.lang) }, ...opts.history.slice(-8)];
   const actions: AgentAction[] = [];
   let refN = 0;
 
-  for (let round = 0; round < 4; round++) {
-    const res = await client.chat.completions.create({ model: OPENAI_MODEL, temperature: 0.2, messages, tools: TOOLS, tool_choice: "auto" });
-    const msg = res.choices[0]?.message;
+  const models = chatModels();
+  let modelIdx = 0;
+
+  for (let round = 0; round < 3; round++) {
+    let msg: OpenAI.Chat.Completions.ChatCompletionMessage | undefined;
+    try {
+      const res = await client.chat.completions.create({ model: models[modelIdx], temperature: 0.2, messages, tools: TOOLS, tool_choice: "auto" });
+      msg = res.choices[0]?.message;
+    } catch (e) {
+      // Retired/unknown model → try the next one (same round).
+      if (isModelError(e) && modelIdx < models.length - 1) {
+        modelIdx++;
+        round--;
+        continue;
+      }
+      // Already have actions (e.g. the follow-up call hit a rate limit): keep them.
+      if (actions.length) return { reply: "", actions, model: models[modelIdx] };
+      throw e;
+    }
     if (!msg) break;
-    messages.push(msg);
     const calls = msg.tool_calls ?? [];
-    if (!calls.length) return { reply: msg.content?.trim() || "", actions };
+    // Only send back the fields providers accept (some models add extra fields like "reasoning").
+    messages.push({ role: "assistant", content: msg.content ?? "", ...(calls.length ? { tool_calls: calls } : {}) } as ChatCompletionMessageParam);
+    if (!calls.length) return { reply: msg.content?.trim() || "", actions, model: models[modelIdx] };
 
     for (const call of calls) {
       if (call.type !== "function") continue;
@@ -242,5 +272,5 @@ export async function runOpenAIAgent(opts: {
       messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(result) });
     }
   }
-  return { reply: "", actions };
+  return { reply: "", actions, model: models[modelIdx] };
 }

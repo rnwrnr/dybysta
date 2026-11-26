@@ -6,6 +6,30 @@ import type { AssistantContext } from "./context";
 import type { LocalNow } from "./heuristic-capture";
 
 export const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+const isGroq = () => /groq\.com/i.test(process.env.OPENAI_BASE_URL ?? "");
+
+/** Models to try in order. Providers retire models (Groq retired llama-3.3-70b-versatile in Aug 2026), so keep fallbacks. */
+export function chatModels(): string[] {
+  const fallbacks = isGroq() ? ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.6-27b"] : ["gpt-4o-mini"];
+  return [...new Set([OPENAI_MODEL, ...fallbacks])];
+}
+export function transcribeModels(): string[] {
+  const fallbacks = isGroq() ? ["whisper-large-v3", "whisper-large-v3-turbo"] : ["gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"];
+  return [...new Set([process.env.OPENAI_TRANSCRIBE_MODEL || fallbacks[0], ...fallbacks])];
+}
+/** True when an API error means "this model can't be used" (retired, unknown, no access), so the next model should be tried. */
+export function isModelError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  const status = (e as { status?: number })?.status;
+  return status === 404 || /decommission|deprecat|model_not_found|does not exist|not found|no access|not supported|unknown model|invalid model/i.test(msg);
+}
+/** Short, safe error text for the UI (no secrets: API keys are never part of provider error messages). */
+export function shortError(e: unknown): string {
+  const status = (e as { status?: number })?.status;
+  const msg = (e instanceof Error ? e.message : String(e)).replace(/\s+/g, " ").slice(0, 180);
+  return status ? `${status}: ${msg}` : msg;
+}
 export const isOpenAIConfigured = () => Boolean(process.env.OPENAI_API_KEY);
 
 let client: OpenAI | null = null;
@@ -181,10 +205,23 @@ ${JSON.stringify(ctx)}`;
 }
 
 export async function openaiOverview(ctx: AssistantContext, language: string): Promise<string> {
+  let lastErr: unknown;
+  for (const model of chatModels()) {
+    try {
+      return await overviewWith(model, ctx, language);
+    } catch (e) {
+      lastErr = e;
+      if (!isModelError(e)) break;
+    }
+  }
+  throw lastErr;
+}
+
+async function overviewWith(model: string, ctx: AssistantContext, language: string): Promise<string> {
   const res = await getClient().chat.completions.create({
-    model: OPENAI_MODEL,
+    model,
     temperature: 0.3,
-    max_tokens: 220,
+    max_tokens: 400,
     messages: [
       {
         role: "system",

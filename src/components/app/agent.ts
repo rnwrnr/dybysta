@@ -19,6 +19,8 @@ export interface AppliedChange {
 export interface AgentResult {
   reply: string;
   changes: AppliedChange[];
+  /** Actions the AI asked for that could not be applied, with the reason. */
+  failed: string[];
   simulated: boolean;
   error?: string;
 }
@@ -53,17 +55,21 @@ export function useAgent() {
       });
       const json = (await res.json()) as AgentResponse & { error?: string };
       if (!res.ok) throw new Error(json.error ?? t("Something went wrong. Please try again."));
-      const changes = await execute(json.actions ?? []);
-      return { reply: json.reply, changes, simulated: json.simulated, error: json.error };
+      const { applied, failed } = await execute(json.actions ?? []);
+      let reply = json.reply;
+      if (json.actions?.length && !applied.length) reply = t("Nothing was saved.");
+      return { reply, changes: applied, failed, simulated: json.simulated, error: json.error };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lang]
   );
 
   /** Applies actions in order. Unknown ids and invalid fields are skipped safely. */
-  const execute = async (actions: AgentAction[]): Promise<AppliedChange[]> => {
+  const execute = async (actions: AgentAction[]): Promise<{ applied: AppliedChange[]; failed: string[] }> => {
     const d = dataRef.current;
     const applied: AppliedChange[] = [];
+    const failed: string[] = [];
+    const fail = (what: string, why: string) => failed.push(`${what || "?"}: ${why}`);
     const refs = new Map<string, string>();
     const cats = new Map(d.categories.map((c) => [c.name.toLowerCase(), c.id]));
     const names = new Map(d.categories.map((c) => [c.id, c.name]));
@@ -135,20 +141,29 @@ export function useAgent() {
             continue;
           }
           const row = await build(action.table, action.data);
-          if (!row.title) continue;
+          if (!row.title) {
+            fail(String(action.data.title ?? ""), t("missing title"));
+            continue;
+          }
           const base: Record<string, unknown> = { source: "ai" };
           if (action.table === "tasks") Object.assign(base, { priority: "medium", status: "todo", due_date: null, due_time: null, completed_at: null, description: null });
           if (action.table === "notes") Object.assign(base, { content: row.title, folder: catName(row.category_id as string) ?? null, tags: [], pinned: false });
           if (action.table === "ideas") Object.assign(base, { status: "new", tags: [], converted_task_id: null, description: null });
           if (action.table === "reminders") {
-            if (!row.remind_at) continue;
+            if (!row.remind_at) {
+              fail(String(row.title), t("missing date or time"));
+              continue;
+            }
             Object.assign(base, { repeat: "none", status: "pending", last_notified_at: null, task_id: null, description: null });
           }
           if (action.table === "events") {
-            if (!row.start_date) continue;
+            if (!row.start_date) {
+              fail(String(row.title), t("missing date"));
+              continue;
+            }
             Object.assign(base, { start_time: null, end_time: null, location: null, description: null });
           }
-          const created = await d.create(action.table as keyof TableMap, { ...base, ...row } as never, { silent: true });
+          const created = await d.create(action.table as keyof TableMap, { ...base, ...row } as never, { silent: true, onError: (m) => fail(String(row.title), m) });
           if (created) {
             if (action.ref) refs.set(action.ref, created.id);
             const c = created as unknown as Record<string, unknown>;
@@ -157,12 +172,15 @@ export function useAgent() {
         } else if (action.op === "update") {
           const id = resolve(action.id);
           const existing = find(action.table, id);
-          if (!existing) continue;
+          if (!existing) {
+            fail(String(action.data.title ?? action.data.name ?? id), t("item not found"));
+            continue;
+          }
           const row = action.table === "categories" ? { name: s(action.data.name) } : await build(action.table, action.data, existing);
           if (!Object.keys(row).length) continue;
           const before: Record<string, unknown> = {};
           for (const k of Object.keys(row)) before[k] = existing[k];
-          const saved = await d.update(action.table as keyof TableMap, id, row as never, { silent: true });
+          const saved = await d.update(action.table as keyof TableMap, id, row as never, { silent: true, onError: (m) => fail(String(existing.title ?? existing.name ?? ""), m) });
           if (saved) applied.push({ table: action.table, kind: "updated", id, title: String((saved as unknown as Record<string, unknown>).title ?? (saved as unknown as Record<string, unknown>).name ?? ""), before });
         } else if (action.op === "delete") {
           const id = resolve(action.id);
@@ -171,11 +189,11 @@ export function useAgent() {
           const ok = await d.remove(action.table as keyof TableMap, id, { silent: true });
           if (ok) applied.push({ table: action.table, kind: "deleted", id, title: String(existing.title ?? existing.name ?? ""), before: existing });
         }
-      } catch {
-        /* skip this action, continue with the rest */
+      } catch (e) {
+        fail(String((action as { data?: Record<string, unknown> }).data?.title ?? ""), e instanceof Error ? e.message : "error");
       }
     }
-    return applied;
+    return { applied, failed };
   };
 
   /** Reverts changes in reverse order. */

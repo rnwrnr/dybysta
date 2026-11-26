@@ -21,6 +21,7 @@ export function VoiceEdit({ focus, onApplied, className }: { focus: AgentFocus; 
     try {
       const r = await agent.send(instruction, { focus });
       onApplied?.(r.changes);
+      if (r.failed.length) toast.error(`${t("Couldn't save:")} ${r.failed.join("; ")}`);
       if (r.changes.length) toast.success(r.reply, { action: { label: t("Undo"), onClick: () => agent.undo(r.changes).then(() => toast(t("Undone"))) } });
       else toast(r.reply || t("Nothing to change."));
       setTyped("");
