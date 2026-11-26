@@ -92,7 +92,7 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
         }}
         title={`${e.title}${e.time ? " · " + formatTime(e.time) : ""}`}
         className={cn(
-          "flex w-full items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-[11px] transition-colors",
+          "flex w-full items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-[12.5px] transition-colors",
           KIND_STYLE[e.kind],
           e.done && "opacity-50 line-through",
           e.overdue && "ring-1 ring-destructive/40"
@@ -136,7 +136,7 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
           <Button variant="ghost" size="icon-sm" onClick={next} aria-label={t("Next")}>
             <ChevronRight />
           </Button>
-          <h2 className="ml-1 text-[15px] font-semibold tracking-tight">{title}</h2>
+          <h2 className="ml-1 text-[17px] font-semibold tracking-tight">{title}</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="xs" onClick={() => setCursor(new Date())}>
@@ -153,7 +153,7 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
 
       <div className="overflow-x-auto scrollbar-thin">
       <div className="min-w-[640px]">
-      <div className="grid grid-cols-7 border-b bg-muted/30 text-[11px] font-medium text-muted-foreground">
+      <div className="grid grid-cols-7 border-b bg-muted/30 text-[12.5px] font-medium text-muted-foreground">
         {days.slice(0, 7).map((d) => (
           <div key={d.toISOString()} className="px-2 py-1.5">
             {fmt(d, lang === "ru" ? "EEEEEE" : "EEE")}
@@ -175,7 +175,7 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
                 <div className="mb-1 flex items-center justify-between">
                   <span
                     className={cn(
-                      "inline-flex size-6 items-center justify-center rounded-full text-[12px]",
+                      "inline-flex size-6 items-center justify-center rounded-full text-[13.5px]",
                       isToday(d) ? "bg-primary font-semibold text-primary-foreground" : isSameMonth(d, cursor) ? "text-foreground" : "text-muted-foreground/60"
                     )}
                   >
@@ -188,7 +188,7 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
                     <Chip key={`${e.kind}-${e.id}`} e={e} />
                   ))}
                   {entries.length > 3 && (
-                    <button onClick={() => { setCursor(d); setMode("week"); }} className="px-1.5 text-left text-[10.5px] text-muted-foreground hover:text-foreground">
+                    <button onClick={() => { setCursor(d); setMode("week"); }} className="px-1.5 text-left text-[12px] text-muted-foreground hover:text-foreground">
                       {t("+{n} more", { n: entries.length - 3 })}
                     </button>
                   )}
@@ -205,14 +205,14 @@ export function CalendarView({ kinds, categoryId }: { kinds: CalKind[]; category
             return (
               <div key={key} className={cn("group min-h-[420px] p-2", i !== 6 && "border-r", isToday(d) && "bg-accent/30")}>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className={cn("inline-flex size-7 items-center justify-center rounded-full text-[13px] font-medium", isToday(d) && "bg-primary text-primary-foreground")}>{format(d, "d")}</span>
+                  <span className={cn("inline-flex size-7 items-center justify-center rounded-full text-[14.5px] font-medium", isToday(d) && "bg-primary text-primary-foreground")}>{format(d, "d")}</span>
                   <AddMenu dayKey={key} />
                 </div>
                 <div className="grid gap-1">
                   {entries.map((e) => (
                     <Chip key={`${e.kind}-${e.id}`} e={e} />
                   ))}
-                  {entries.length === 0 && <p className="pt-2 text-center text-[11px] text-muted-foreground/50">—</p>}
+                  {entries.length === 0 && <p className="pt-2 text-center text-[12.5px] text-muted-foreground/50">—</p>}
                 </div>
               </div>
             );

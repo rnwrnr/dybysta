@@ -30,9 +30,9 @@ function DemoEntry({ mode }: { mode: "login" | "signup" }) {
       <CardContent className="grid gap-4 pt-6">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">{mode === "login" ? t("Welcome back") : t("Create your space")}</h1>
-          <p className="text-[13px] text-muted-foreground">{t("Try DYBYSTA instantly — no account needed.")}</p>
+          <p className="text-[14.5px] text-muted-foreground">{t("Try DYBYSTA instantly — no account needed.")}</p>
         </div>
-        <div className="rounded-lg border border-warning/30 bg-warning/8 p-3 text-[12.5px] leading-relaxed">
+        <div className="rounded-lg border border-warning/30 bg-warning/8 p-3 text-[14px] leading-relaxed">
           <p className="mb-1 flex items-center gap-1.5 font-semibold text-[oklch(0.5_0.13_60)]">
             <FlaskConical className="size-3.5" /> {t("Demo mode")}
           </p>
@@ -106,7 +106,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         <CardContent className="grid justify-items-center gap-3 py-10 text-center">
           <MailCheck className="size-8 text-primary" />
           <h1 className="text-lg font-semibold">{t("Check your inbox")}</h1>
-          <p className="text-[13px] text-muted-foreground">{t("We sent a confirmation link to {email}. Click it to activate your account.", { email })}</p>
+          <p className="text-[14.5px] text-muted-foreground">{t("We sent a confirmation link to {email}. Click it to activate your account.", { email })}</p>
         </CardContent>
       </Card>
     );
@@ -116,7 +116,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <CardContent className="grid gap-5 pt-6">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">{mode === "login" ? t("Welcome back") : t("Create your account")}</h1>
-          <p className="text-[13px] text-muted-foreground">{mode === "login" ? t("Sign in to your personal assistant.") : t("Start organizing your life in seconds.")}</p>
+          <p className="text-[14.5px] text-muted-foreground">{mode === "login" ? t("Sign in to your personal assistant.") : t("Start organizing your life in seconds.")}</p>
         </div>
         <form onSubmit={submit} className="grid gap-3">
           {mode === "signup" && (
@@ -142,7 +142,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             />
           </div>
           {error && (
-            <p role="alert" className="rounded-md bg-destructive/8 px-3 py-2 text-[12.5px] text-destructive">
+            <p role="alert" className="rounded-md bg-destructive/8 px-3 py-2 text-[14px] text-destructive">
               {error}
             </p>
           )}
@@ -151,7 +151,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             {mode === "login" ? t("Sign in") : t("Create account")}
           </Button>
         </form>
-        <p className="text-center text-[13px] text-muted-foreground">
+        <p className="text-center text-[14.5px] text-muted-foreground">
           {mode === "login" ? t("New to DYBYSTA?") : t("Already have an account?")}{" "}
           <Link href={mode === "login" ? "/signup" : "/login"} className="font-medium text-primary hover:underline">
             {mode === "login" ? t("Create an account") : t("Sign in")}

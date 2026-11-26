@@ -12,7 +12,7 @@ export function Field({ label, children, hint, className }: { label: React.React
     <div className={className}>
       <Label className="mb-1.5">{label}</Label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-1 text-[12.5px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -66,7 +66,7 @@ export function TagInput({ value, onChange, placeholder }: { value: string[]; on
   return (
     <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border border-input bg-card px-2 py-1.5 shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/25">
       {value.map((t) => (
-        <span key={t} className="inline-flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-[11px] font-medium text-accent-foreground">
+        <span key={t} className="inline-flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-[12.5px] font-medium text-accent-foreground">
           #{t}
           <button type="button" aria-label={`× #${t}`} className="opacity-60 hover:opacity-100" onClick={() => onChange(value.filter((x) => x !== t))}>
             ×

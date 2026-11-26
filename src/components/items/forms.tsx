@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { fromDateKey, hhmm, toDateKey } from "@/lib/dates";
 import { useData } from "@/lib/data/store";
 import type { CalendarEvent, Idea, IdeaStatus, Reminder, Task, TaskStatus } from "@/lib/types";
+import { VoiceEdit } from "@/components/capture/voice-edit";
 import { CategorySelect } from "./category-select";
 import { Field, PrioritySelect, RepeatSelect, TagInput } from "./fields";
 
@@ -78,6 +79,7 @@ export function TaskForm({ editing, initial, onDone }: FormProps<Task>) {
         <DialogTitle>{editing ? t("Edit task") : t("New task")}</DialogTitle>
         <DialogDescription className="sr-only">{t("Task details")}</DialogDescription>
       </DialogHeader>
+      {editing && <VoiceEdit focus={{ type: "task", id: editing.id }} onApplied={(c) => c.length && onDone(null)} />}
       <Field label={t("Title")}>
         <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("What needs to be done?")} required maxLength={300} />
       </Field>
@@ -166,6 +168,7 @@ export function ReminderForm({ editing, initial, onDone }: FormProps<Reminder>) 
         <DialogTitle>{editing ? t("Edit reminder") : t("New reminder")}</DialogTitle>
         <DialogDescription>{t("You'll get an in-app notification at the time you choose — and a browser notification if you enabled it in Settings.")}</DialogDescription>
       </DialogHeader>
+      {editing && <VoiceEdit focus={{ type: "reminder", id: editing.id }} onApplied={(c) => c.length && onDone(null)} />}
       <Field label={t("Remind me to…")}>
         <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("Call the bank")} required maxLength={300} />
       </Field>
@@ -239,6 +242,7 @@ export function EventForm({ editing, initial, onDone }: FormProps<CalendarEvent>
         <DialogTitle>{editing ? t("Edit event") : t("New event")}</DialogTitle>
         <DialogDescription className="sr-only">{t("Event details")}</DialogDescription>
       </DialogHeader>
+      {editing && <VoiceEdit focus={{ type: "event", id: editing.id }} onApplied={(c) => c.length && onDone(null)} />}
       <Field label={t("Title")}>
         <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("Team meeting")} required maxLength={300} />
       </Field>
@@ -306,6 +310,7 @@ export function IdeaForm({ editing, initial, onDone }: FormProps<Idea>) {
         <DialogTitle>{editing ? t("Edit idea") : t("New idea")}</DialogTitle>
         <DialogDescription className="sr-only">{t("Idea details")}</DialogDescription>
       </DialogHeader>
+      {editing && <VoiceEdit focus={{ type: "idea", id: editing.id }} onApplied={(c) => c.length && onDone(null)} />}
       <Field label={t("Idea")}>
         <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("A short name for your idea")} required maxLength={300} />
       </Field>

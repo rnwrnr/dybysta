@@ -37,6 +37,7 @@ export function LanguageToggle({ value, onChange }: { value: VoiceLanguage; onCh
   const opts: { v: VoiceLanguage; label: string; full: string }[] = [
     { v: "en-US", label: "EN", full: "English" },
     { v: "ru-RU", label: "RU", full: "Русский" },
+    { v: "kk-KZ", label: "KZ", full: "Қазақша" },
   ];
   return (
     <div role="radiogroup" aria-label={t("Voice language")} className="inline-flex h-7 items-center rounded-md bg-muted p-0.5">
@@ -49,7 +50,7 @@ export function LanguageToggle({ value, onChange }: { value: VoiceLanguage; onCh
           title={o.full}
           onClick={() => onChange(o.v)}
           className={cn(
-            "h-6 rounded px-2 text-[11px] font-semibold tracking-wide transition-all",
+            "h-6 rounded px-2 text-[12.5px] font-semibold tracking-wide transition-all",
             value === o.v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           )}
         >

@@ -70,7 +70,7 @@ export function LanguageSwitch({ className, beforeChange }: { className?: string
               setLang(l);
             }
           }}
-          className={`h-6 rounded px-2 text-[11px] font-semibold transition-all ${lang === l ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          className={`h-6 rounded px-2 text-[12.5px] font-semibold transition-all ${lang === l ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
         >
           {l === "en" ? "EN" : "RU"}
         </button>

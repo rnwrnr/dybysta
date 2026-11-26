@@ -9,7 +9,7 @@ import type { CaptureKind, ItemSource, Priority } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  violet: "bg-violet-500",
+  violet: "bg-sand-500",
   blue: "bg-blue-500",
   amber: "bg-amber-500",
   green: "bg-emerald-500",
@@ -23,7 +23,7 @@ export const COLOR_OPTIONS = Object.keys(CATEGORY_COLORS);
 export const KIND_META: Record<CaptureKind, { label: string; icon: LucideIcon; tint: string }> = {
   task: { label: "Task", icon: CheckCircle2, tint: "text-blue-600 bg-blue-50" },
   reminder: { label: "Reminder", icon: Bell, tint: "text-amber-600 bg-amber-50" },
-  idea: { label: "Idea", icon: Lightbulb, tint: "text-violet-600 bg-violet-50" },
+  idea: { label: "Idea", icon: Lightbulb, tint: "text-sand-600 bg-sand-50" },
   note: { label: "Note", icon: StickyNote, tint: "text-emerald-600 bg-emerald-50" },
   event: { label: "Event", icon: CalendarDays, tint: "text-rose-600 bg-rose-50" },
 };
@@ -55,7 +55,7 @@ export function PriorityFlag({ priority, showLabel }: { priority: Priority; show
   const { t } = useT();
   const p = PRIORITY_STYLE[priority];
   return (
-    <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", p.cls)} title={t("{p} priority", { p: t(p.label) })}>
+    <span className={cn("inline-flex items-center gap-1 text-[12.5px] font-medium", p.cls)} title={t("{p} priority", { p: t(p.label) })}>
       <Flag className="size-3" fill={priority === "urgent" || priority === "high" ? "currentColor" : "none"} />
       {showLabel && t(p.label)}
     </span>
@@ -70,7 +70,7 @@ export function CategoryBadge({ id }: { id: string | null | undefined }) {
   const c = categoryById(id);
   if (!c) return null;
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
       <span className={cn("size-1.5 rounded-full", CATEGORY_COLORS[c.color] ?? "bg-slate-400")} />
       {c.name}
     </span>
@@ -83,7 +83,7 @@ export function AiBadge({ source, label = "AI" }: { source?: ItemSource; label?:
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[10px] font-medium text-primary/80 ring-1 ring-primary/15">
+        <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[12px] font-medium text-primary/80 ring-1 ring-primary/15">
           <Sparkles className="size-2.5" />
           {t(label)}
         </span>
@@ -114,7 +114,7 @@ export function EmptyState({ icon: Icon, title, description, action }: { icon: L
         <Icon className="size-5" />
       </span>
       <p className="text-sm font-medium">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">{description}</p>}
+      {description && <p className="mt-1 max-w-sm text-[14.5px] text-muted-foreground">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
@@ -125,7 +125,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>}
+        {description && <p className="mt-0.5 text-[14.5px] text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>

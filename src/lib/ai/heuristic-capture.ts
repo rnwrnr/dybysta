@@ -127,7 +127,7 @@ function extractDate(text: string, now: LocalNow): DateResult {
     res.date = addDaysKey(now.date, 2);
     return res;
   }
-  if (take(/\btomorrow\b|\btmrw\b|завтра/)) {
+  if (take(/\btomorrow\b|\btmrw\b|завтра|ертең/)) {
     res.date = addDaysKey(now.date, 1);
     return res;
   }
@@ -136,7 +136,7 @@ function extractDate(text: string, now: LocalNow): DateResult {
     res.vagueTime = "evening";
     return res;
   }
-  if (take(/\btoday\b|сегодня/)) {
+  if (take(/\btoday\b|сегодня|бүгін/)) {
     res.date = now.date;
     return res;
   }
@@ -254,6 +254,7 @@ function extractTime(text: string, now: LocalNow, vague?: DateResult["vagueTime"
     /\b(?:at\s+|@\s*)?(\d{1,2})\s*(am|pm|a\.m\.|p\.m\.)/,
     /\b(?:at|@)\s+(\d{1,2})\b(?!\s*(?:days?|weeks?|months?|%|st|nd|rd|th))/,
     /(?:^|\s)(?:в|к)\s+(\d{1,2})(?:\s*(час[аов]*))?(?:\s+(утра|дня|вечера|ночи))?(?=\s|$|[.,!?])/,
+    /(?:сағат\s+)(\d{1,2})(?:\s*[-:]?\s*(?:те|та|де|да))?(?=\s|$|[.,!?])/,
   ];
 
   let hour: number | null = null;
@@ -404,9 +405,9 @@ function cleanTitle(original: string, removals: string[]): string {
 
 function detectKind(t: string, hasDate: boolean, hasTime: boolean): { kind: CaptureKind; confidence: number; reason: string } {
   const s = t.toLowerCase();
-  if (/\bremind me\b|\breminder\b|\bset an? alarm\b|напомни|напоминани/.test(s)) return { kind: "reminder", confidence: 0.95, reason: "You asked to be reminded." };
+  if (/\bremind me\b|\breminder\b|\bset an? alarm\b|напомни|напоминани|еске сал|ескерт/.test(s)) return { kind: "reminder", confidence: 0.95, reason: "You asked to be reminded." };
   if (/^(remember that|note that|note:|fyi|keep in mind)|\bremember that\b|запомни|заметка|на заметку|имей в виду/.test(s)) return { kind: "note", confidence: 0.9, reason: "This is information to remember, not an action." };
-  if (/\bidea\b|^what if\b|\bconcept for\b|идея|а что если/.test(s)) return { kind: "idea", confidence: 0.92, reason: "You described an idea." };
+  if (/\bidea\b|^what if\b|\bconcept for\b|идея|а что если|ой\b/.test(s)) return { kind: "idea", confidence: 0.92, reason: "You described an idea." };
   if (/\bdon't forget\b|\bdo not forget\b|не забыть|не забудь/.test(s) && hasTime) return { kind: "reminder", confidence: 0.8, reason: '"Don\'t forget" with a time sounds like a reminder.' };
   const eventWords = /\b(meeting|appointment|interview|lecture|class|exam|party|conference|dinner|lunch|call with|webinar|concert|flight|wedding|date with)\b|встреча|собрание|приём|прием|экзамен|вечеринк|конференц|ужин|обед с|созвон|вебинар|концерт|рейс|свадьб/;
   if (eventWords.test(s) && hasDate && !/\b(need to|have to|must|prepare|finish)\b|нужно|надо|подготовить/.test(s)) return { kind: "event", confidence: hasTime ? 0.85 : 0.7, reason: "Sounds like something scheduled at a specific time." };

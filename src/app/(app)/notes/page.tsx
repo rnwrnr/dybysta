@@ -11,12 +11,13 @@ import { useDialogs } from "@/components/app/dialogs";
 import { CategorySelect } from "@/components/items/category-select";
 import { TagInput } from "@/components/items/fields";
 import { AiBadge, EmptyState, PageHeader } from "@/components/items/meta";
+import { VoiceEdit } from "@/components/capture/voice-edit";
 import { relativeDayLabel } from "@/lib/dates";
 import { useData } from "@/lib/data/store";
 import type { Note } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => void; onBack: () => void }) {
+function NoteEditor({ note, onDeleted, onBack, onVoiceEdited }: { note: Note; onDeleted: () => void; onBack: () => void; onVoiceEdited: () => void }) {
   const { update, remove, notes } = useData();
   const { open } = useDialogs();
   const { t } = useT();
@@ -46,7 +47,7 @@ function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => 
         <Button variant="ghost" size="icon-xs" className="md:hidden" onClick={onBack} aria-label={t("Back to notes")}>
           <ArrowLeft />
         </Button>
-        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
           {status === "saving" ? <Loader2 className="size-3 animate-spin" /> : status === "saved" ? <Check className="size-3" /> : null}
           {status === "saving" ? t("Saving…") : status === "saved" ? t("Saved") : t("Editing…")}
         </span>
@@ -76,6 +77,7 @@ function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => 
         </DropdownMenu>
       </div>
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5">
+        <VoiceEdit focus={{ type: "note", id: note.id }} onApplied={(c) => c.length && onVoiceEdited()} />
         <input
           value={draft.title}
           onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
@@ -86,7 +88,7 @@ function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => 
         <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
           <div className="relative">
             <Folder className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input list="note-folders" value={draft.folder} onChange={(e) => setDraft((d) => ({ ...d, folder: e.target.value }))} placeholder={t("Folder")} className="h-8 pl-8 text-[13px]" aria-label={t("Folder")} />
+            <Input list="note-folders" value={draft.folder} onChange={(e) => setDraft((d) => ({ ...d, folder: e.target.value }))} placeholder={t("Folder")} className="h-8 pl-8 text-[14.5px]" aria-label={t("Folder")} />
             <datalist id="note-folders">
               {folders.map((f) => (
                 <option key={f} value={f} />
@@ -101,7 +103,7 @@ function NoteEditor({ note, onDeleted, onBack }: { note: Note; onDeleted: () => 
           onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
           placeholder={t("Start writing…")}
           aria-label={t("Note content")}
-          className="min-h-[320px] flex-1 resize-none bg-transparent text-[14.5px] leading-relaxed outline-none placeholder:text-muted-foreground/50"
+          className="min-h-[320px] flex-1 resize-none bg-transparent text-[16px] leading-relaxed outline-none placeholder:text-muted-foreground/50"
         />
       </div>
     </div>
@@ -117,6 +119,7 @@ function NotesInner() {
   const [folder, setFolder] = React.useState<string | null>(null);
   const [tag, setTag] = React.useState<string | null>(null);
   const [selectedId, setSelectedId] = React.useState<string | null>(params.get("id"));
+  const [editorVersion, setEditorVersion] = React.useState(0);
 
   const folders = [...new Set(notes.map((n) => n.folder).filter(Boolean))].sort() as string[];
   const tags = [...new Set(notes.flatMap((n) => n.tags))].sort();
@@ -158,17 +161,17 @@ function NotesInner() {
           <div className="grid gap-2 border-b p-3">
             <div className="relative">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search notes…")} className="h-8 pl-8 text-[13px]" aria-label={t("Search notes")} />
+              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search notes…")} className="h-8 pl-8 text-[14.5px]" aria-label={t("Search notes")} />
             </div>
             {(folders.length > 0 || tags.length > 0) && (
               <div className="flex flex-wrap gap-1">
                 {folders.map((f) => (
-                  <button key={f} onClick={() => setFolder(folder === f ? null : f)} className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px]", folder === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground")}>
+                  <button key={f} onClick={() => setFolder(folder === f ? null : f)} className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[12.5px]", folder === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground")}>
                     <Folder className="size-3" /> {f}
                   </button>
                 ))}
                 {tags.map((tg) => (
-                  <button key={tg} onClick={() => setTag(tag === tg ? null : tg)} className={cn("rounded px-1.5 py-0.5 text-[11px]", tag === tg ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground hover:bg-accent/70")}>
+                  <button key={tg} onClick={() => setTag(tag === tg ? null : tg)} className={cn("rounded px-1.5 py-0.5 text-[12.5px]", tag === tg ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground hover:bg-accent/70")}>
                     #{tg}
                   </button>
                 ))}
@@ -176,19 +179,19 @@ function NotesInner() {
             )}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-1.5 scrollbar-thin">
-            {filtered.length === 0 && <p className="px-3 py-8 text-center text-[13px] text-muted-foreground">{notes.length ? t("No notes match.") : t("No notes yet.")}</p>}
+            {filtered.length === 0 && <p className="px-3 py-8 text-center text-[14.5px] text-muted-foreground">{notes.length ? t("No notes match.") : t("No notes yet.")}</p>}
             {filtered.map((n) => (
               <button
                 key={n.id}
                 onClick={() => select(n.id)}
                 className={cn("block w-full rounded-lg px-3 py-2.5 text-left transition-colors", n.id === selectedId ? "bg-accent" : "hover:bg-muted/60")}
               >
-                <p className="flex items-center gap-1.5 truncate text-[13px] font-medium">
+                <p className="flex items-center gap-1.5 truncate text-[14.5px] font-medium">
                   {n.pinned && <Pin className="size-3 shrink-0 text-primary" />}
                   {n.title || t("Untitled")}
                 </p>
-                <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">{n.content || t("Empty note")}</p>
-                <p className="mt-1 flex items-center gap-2 text-[10.5px] text-muted-foreground/80">
+                <p className="mt-0.5 line-clamp-2 text-[13.5px] text-muted-foreground">{n.content || t("Empty note")}</p>
+                <p className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground/80">
                   {relativeDayLabel(new Date(n.updated_at))}
                   {n.folder && (
                     <span className="inline-flex items-center gap-0.5">
@@ -202,7 +205,7 @@ function NotesInner() {
         </div>
         <div className={cn("min-h-0", !selected && "hidden md:block")}>
           {selected ? (
-            <NoteEditor key={selected.id} note={selected} onDeleted={() => select(null)} onBack={() => select(null)} />
+            <NoteEditor key={`${selected.id}-${editorVersion}`} note={selected} onDeleted={() => select(null)} onBack={() => select(null)} onVoiceEdited={() => setEditorVersion((v) => v + 1)} />
           ) : (
             <div className="flex h-full items-center justify-center p-6">
               <EmptyState

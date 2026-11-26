@@ -4,7 +4,7 @@ export type ReminderStatus = "pending" | "snoozed" | "dismissed" | "done";
 export type ReminderRepeat = "none" | "daily" | "weekdays" | "weekly" | "monthly";
 export type IdeaStatus = "new" | "exploring" | "converted" | "archived";
 export type ItemSource = "manual" | "ai";
-export type VoiceLanguage = "en-US" | "ru-RU";
+export type VoiceLanguage = "en-US" | "ru-RU" | "kk-KZ";
 
 interface Owned {
   id: string;

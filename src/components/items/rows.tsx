@@ -28,23 +28,23 @@ export function TaskRow({ task, showDate = true, compact }: { task: Task; showDa
     <div className={cn("group flex items-start gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/60", compact && "py-1.5")}>
       <Checkbox checked={done} onCheckedChange={(c) => toggle(c === true)} className="mt-0.5" aria-label={done ? t('Mark "{title}" as not done', { title: task.title }) : t('Complete "{title}"', { title: task.title })} />
       <button className="min-w-0 flex-1 text-left" onClick={() => open({ type: "task", editing: task })}>
-        <p className={cn("text-[13.5px] leading-snug", done && "text-muted-foreground line-through")}>{task.title}</p>
+        <p className={cn("text-[15px] leading-snug", done && "text-muted-foreground line-through")}>{task.title}</p>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
           {showDate && task.due_date && (
-            <span className={cn("inline-flex items-center gap-1 text-[11px]", overdue ? "font-medium text-destructive" : "text-muted-foreground")}>
+            <span className={cn("inline-flex items-center gap-1 text-[12.5px]", overdue ? "font-medium text-destructive" : "text-muted-foreground")}>
               {overdue ? <AlertCircle className="size-3" /> : <CalendarDays className="size-3" />}
               {overdue && `${t("Overdue")} · `}
               {formatDue(task.due_date, task.due_time)}
             </span>
           )}
           {!showDate && task.due_time && (
-            <span className={cn("inline-flex items-center gap-1 text-[11px]", overdue ? "font-medium text-destructive" : "text-muted-foreground")}>
+            <span className={cn("inline-flex items-center gap-1 text-[12.5px]", overdue ? "font-medium text-destructive" : "text-muted-foreground")}>
               <Clock className="size-3" /> {formatTime(task.due_time)}
             </span>
           )}
           {!done && task.priority !== "medium" && <PriorityFlag priority={task.priority} showLabel />}
           <CategoryBadge id={task.category_id} />
-          {task.status === "in_progress" && <span className="text-[11px] text-blue-600">{t("In progress")}</span>}
+          {task.status === "in_progress" && <span className="text-[12.5px] text-blue-600">{t("In progress")}</span>}
           <AiBadge source={task.source} />
         </div>
       </button>
@@ -96,8 +96,8 @@ export function ReminderRow({ reminder: r }: { reminder: Reminder }) {
         <Bell className="size-3" />
       </span>
       <button className="min-w-0 flex-1 text-left" onClick={() => open({ type: "reminder", editing: r })}>
-        <p className={cn("text-[13.5px] leading-snug", inactive && "text-muted-foreground line-through")}>{r.title}</p>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">
+        <p className={cn("text-[15px] leading-snug", inactive && "text-muted-foreground line-through")}>{r.title}</p>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[12.5px] text-muted-foreground">
           <span className={cn("inline-flex items-center gap-1", due && "font-medium text-destructive")}>
             <Clock className="size-3" />
             {due ? `${t("Due")} · ` : ""}
@@ -163,8 +163,8 @@ export function EventRow({ event: e, showDate = true }: { event: CalendarEvent; 
         <CalendarDays className="size-3" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[13.5px] leading-snug">{e.title}</span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 text-[11px] text-muted-foreground">
+        <span className="block text-[15px] leading-snug">{e.title}</span>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 text-[12.5px] text-muted-foreground">
           <span>
             {showDate ? formatDue(e.start_date, e.start_time) : e.start_time ? formatTime(e.start_time) : t("All day")}
             {e.end_time && ` – ${formatTime(e.end_time)}`}

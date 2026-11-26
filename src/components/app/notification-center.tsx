@@ -52,19 +52,19 @@ export function NotificationCenter() {
       <PopoverContent align="end" className="w-[340px] p-0">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <p className="text-sm font-semibold">{t("Notifications")}</p>
-          <Link href="/settings#notifications" className="text-[12px] text-muted-foreground hover:text-foreground">
+          <Link href="/settings#notifications" className="text-[13.5px] text-muted-foreground hover:text-foreground">
             {t("Settings")}
           </Link>
         </div>
         <div className="max-h-[420px] overflow-y-auto">
-          {due.length === 0 && soon.length === 0 && <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">{t("You're all caught up.")}</p>}
-          {due.length > 0 && <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{t("Due now")}</p>}
+          {due.length === 0 && soon.length === 0 && <p className="px-4 py-8 text-center text-[14.5px] text-muted-foreground">{t("You're all caught up.")}</p>}
+          {due.length > 0 && <p className="px-4 pt-3 pb-1 text-[12.5px] font-semibold tracking-wide text-muted-foreground uppercase">{t("Due now")}</p>}
           {due.map((r) => (
             <div key={r.id} className="flex items-start gap-3 px-4 py-2.5 hover:bg-muted/50">
               <span className="mt-1 size-2 shrink-0 rounded-full bg-destructive" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium">{r.title}</p>
-                <p className="text-[11px] text-muted-foreground">{formatDateTime(r.remind_at)}</p>
+                <p className="truncate text-[14.5px] font-medium">{r.title}</p>
+                <p className="text-[12.5px] text-muted-foreground">{formatDateTime(r.remind_at)}</p>
                 <div className="mt-1.5 flex gap-1">
                   <Button size="xs" variant="outline" onClick={() => a.done(r)}>
                     <Check /> {t("Done")}
@@ -81,17 +81,17 @@ export function NotificationCenter() {
               </div>
             </div>
           ))}
-          {soon.length > 0 && <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{t("Next 24 hours")}</p>}
+          {soon.length > 0 && <p className="px-4 pt-3 pb-1 text-[12.5px] font-semibold tracking-wide text-muted-foreground uppercase">{t("Next 24 hours")}</p>}
           {soon.map((r) => (
             <div key={r.id} className="flex items-center gap-3 px-4 py-2">
               <Clock className="size-3.5 shrink-0 text-muted-foreground" />
-              <p className="min-w-0 flex-1 truncate text-[13px]">{r.title}</p>
-              <span className="shrink-0 text-[11px] text-muted-foreground">{formatDateTime(r.remind_at)}</span>
+              <p className="min-w-0 flex-1 truncate text-[14.5px]">{r.title}</p>
+              <span className="shrink-0 text-[12.5px] text-muted-foreground">{formatDateTime(r.remind_at)}</span>
             </div>
           ))}
         </div>
         <div className="border-t px-4 py-2">
-          <Link href="/reminders" className="text-[12px] font-medium text-primary hover:underline">
+          <Link href="/reminders" className="text-[13.5px] font-medium text-primary hover:underline">
             {t("View all reminders")} →
           </Link>
         </div>

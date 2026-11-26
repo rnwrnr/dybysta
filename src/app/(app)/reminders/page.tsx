@@ -50,7 +50,7 @@ export default function RemindersPage() {
       />
 
       {!preferences.notifications_enabled && (
-        <div className="mb-5 rounded-lg border border-warning/30 bg-warning/8 px-4 py-2.5 text-[13px]">
+        <div className="mb-5 rounded-lg border border-warning/30 bg-warning/8 px-4 py-2.5 text-[14.5px]">
           {t("Notifications are turned off — reminders will only appear here and in the bell menu.")}{" "}
           <Link href="/settings#notifications" className="font-medium text-primary hover:underline">
             {t("Change in Settings")}
@@ -62,7 +62,7 @@ export default function RemindersPage() {
         <div className="grid gap-5">
           {due.length > 0 && (
             <section>
-              <p className="mb-1 flex items-center gap-1.5 px-2 text-[12px] font-semibold text-destructive">
+              <p className="mb-1 flex items-center gap-1.5 px-2 text-[13.5px] font-semibold text-destructive">
                 <BellRing className="size-3.5" /> {t("Due now")}
               </p>
               <div className="rounded-xl border border-destructive/20 bg-card p-1.5">
@@ -74,7 +74,7 @@ export default function RemindersPage() {
           )}
           {[...byDay.entries()].map(([label, list]) => (
             <section key={label}>
-              <p className="mb-1 px-2 text-[12px] font-semibold text-muted-foreground">{label}</p>
+              <p className="mb-1 px-2 text-[13.5px] font-semibold text-muted-foreground">{label}</p>
               <div className="rounded-xl border bg-card p-1.5">
                 {list.map((r) => (
                   <ReminderRow key={r.id} reminder={r} />

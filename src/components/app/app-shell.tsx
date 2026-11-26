@@ -75,14 +75,14 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "group flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",
+              "group flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[14.5px] font-medium transition-colors",
               active ? "bg-card text-foreground shadow-[0_1px_2px_rgba(16,16,32,0.06)] ring-1 ring-border" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
             <Icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
             <span className="flex-1">{t(item.label)}</span>
             {counts[item.href] ? (
-              <span className={cn("rounded px-1.5 text-[10px] font-semibold", item.href === "/reminders" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>
+              <span className={cn("rounded px-1.5 text-[12px] font-semibold", item.href === "/reminders" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>
                 {counts[item.href]}
               </span>
             ) : null}
@@ -106,12 +106,12 @@ function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex w-full items-center gap-2.5 rounded-md p-1.5 text-left transition-colors hover:bg-muted">
-          <span className="flex size-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-purple-200 text-[11px] font-semibold text-primary">
+          <span className="flex size-7 items-center justify-center rounded-full bg-gradient-to-br from-sand-100 to-sand-200 text-[12.5px] font-semibold text-primary">
             {initials(profile.full_name)}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-medium">{profile.full_name ?? t("You")}</span>
-            <span className="block truncate text-[11px] text-muted-foreground">{mode === "demo" ? t("Demo account") : profile.email}</span>
+            <span className="block truncate text-[14.5px] font-medium">{profile.full_name ?? t("You")}</span>
+            <span className="block truncate text-[12.5px] text-muted-foreground">{mode === "demo" ? t("Demo account") : profile.email}</span>
           </span>
         </button>
       </DropdownMenuTrigger>
@@ -154,12 +154,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         className="justify-start"
       >
         <Plus /> {t("Quick capture")}
-        <kbd className="ml-auto rounded bg-white/15 px-1.5 text-[10px] font-medium">C</kbd>
+        <kbd className="ml-auto rounded bg-white/15 px-1.5 text-[12px] font-medium">C</kbd>
       </Button>
       <NavLinks onNavigate={onNavigate} />
       <div className="mt-auto grid gap-2">
         {(mode === "demo" || !ai.configured) && (
-          <div className="rounded-lg border border-warning/30 bg-warning/8 p-2.5 text-[11.5px] leading-snug text-foreground/80">
+          <div className="rounded-lg border border-warning/30 bg-warning/8 p-2.5 text-[13px] leading-snug text-foreground/80">
             <p className="mb-0.5 flex items-center gap-1.5 font-semibold text-[oklch(0.5_0.13_60)]">
               <FlaskConical className="size-3.5" /> {t("Demo mode")}
             </p>
@@ -170,12 +170,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <Link
           href="/settings"
           onClick={onNavigate}
-          className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[14.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Settings className="size-4" /> {t("Settings")}
         </Link>
         <div className="flex items-center justify-between px-2.5">
-          <span className="text-[12px] text-muted-foreground">{t("Language")}</span>
+          <span className="text-[13.5px] text-muted-foreground">{t("Language")}</span>
           <InterfaceLanguageSwitch />
         </div>
         <UserMenu />
@@ -192,7 +192,7 @@ function CaptureDialog() {
       <DialogContent className="top-[12%] translate-y-0 sm:max-w-2xl" hideClose>
         <div className="flex items-center justify-between">
           <DialogTitle className="flex items-center gap-2">{t("Quick capture")}</DialogTitle>
-          <span className="text-[11px] text-muted-foreground">{t("Esc to close")}</span>
+          <span className="text-[12.5px] text-muted-foreground">{t("Esc to close")}</span>
         </div>
         <DialogDescription className="-mt-2">{t("Type or speak naturally. You'll review everything before it's saved.")}</DialogDescription>
         <CaptureComposer autoFocus compact onComplete={() => setCaptureOpen(false)} />
@@ -276,7 +276,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
           ) : error ? (
             <div className="mx-auto mt-20 max-w-md rounded-xl border bg-card p-6 text-center">
               <p className="font-medium">{t("Something went wrong loading your data")}</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">{error}</p>
+              <p className="mt-1 text-[14.5px] text-muted-foreground">{error}</p>
               <Button className="mt-4" onClick={reload}>
                 {t("Try again")}
               </Button>

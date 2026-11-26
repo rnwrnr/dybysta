@@ -76,7 +76,7 @@ export function DailyOverview() {
   if (data.preferences.daily_overview_enabled === false) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-violet-50 via-card to-card p-5">
+    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-sand-50 via-card to-card p-5">
       <div className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-primary/10 blur-3xl" />
       <div className="relative flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -90,19 +90,19 @@ export function DailyOverview() {
           <RefreshCw className={loading ? "animate-spin" : ""} />
         </Button>
       </div>
-      <div className="relative mt-3 text-[14px] leading-relaxed text-foreground/85">
+      <div className="relative mt-3 text-[15.5px] leading-relaxed text-foreground/85">
         {loading && !state ? (
           <div className="grid gap-2">
             <Skeleton className="h-3.5 w-full" />
             <Skeleton className="h-3.5 w-4/5" />
           </div>
         ) : error ? (
-          <p className="text-[13px] text-muted-foreground">{error}</p>
+          <p className="text-[14.5px] text-muted-foreground">{error}</p>
         ) : (
           <p>{state?.text}</p>
         )}
       </div>
-      <p className="relative mt-3 text-[11px] text-muted-foreground">{t("AI summary of your saved items — it doesn't change anything.")}</p>
+      <p className="relative mt-3 text-[12.5px] text-muted-foreground">{t("AI summary of your saved items — it doesn't change anything.")}</p>
     </div>
   );
 }

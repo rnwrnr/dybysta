@@ -1,8 +1,10 @@
 # DYBYSTA
 
+> **Deploying?** See [DEPLOY.md](DEPLOY.md) for step-by-step launch instructions.
+
 A personal AI assistant that helps you remember tasks, ideas, notes and commitments through natural language and voice.
 
-> **AI should be proactive — but the user stays the boss.** Nothing AI-generated is saved until you approve it, every interpretation is shown, and missing details are asked for instead of invented.
+> **Your second brain.** Say anything — DYBYSTA understands it, saves it immediately and files it into the right folder. Tell it to do something ("create a category Entertainment", "move it to Friday") and it does it. Every action can be undone.
 
 ## Quick start
 
@@ -18,12 +20,12 @@ Open http://localhost:3000.
 | --- | --- |
 | No keys | **Demo mode.** Enter with just a name; data lives in `localStorage` (seeded with sample items); AI uses the built-in parser and is labeled **Simulated AI**. |
 | Supabase keys | Real email/password accounts; data stored in Postgres with Row Level Security. |
-| `OPENAI_API_KEY` | Live AI capture, assistant and daily overview (default model `gpt-4o-mini`, set `OPENAI_MODEL` to change). Falls back to the offline parser, clearly labeled, if the API fails. |
+| `OPENAI_API_KEY` | Live JARVIS agent (executes commands, auto-saves and auto-organizes), mixed Kazakh/Russian/English voice transcription, assistant and daily overview (default model `gpt-4o-mini`, set `OPENAI_MODEL` to change). Falls back to the offline parser, clearly labeled, if the API fails. |
 
 ### Supabase setup
 
 1. Create a project at supabase.com.
-2. Run `supabase/migrations/0001_init.sql`, then `0002_russian_ui.sql`, in the SQL editor (or `supabase db push`).
+2. Run `supabase/migrations/0001_init.sql`, `0002_russian_ui.sql` and `0003_kazakh_voice.sql` in order in the SQL editor (or `supabase db push`).
 3. Put the project URL and anon key in `.env.local`.
 4. In Auth → URL configuration, add `http://localhost:3000/auth/callback` (and your production URL) as a redirect URL for email confirmation.
 

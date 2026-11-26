@@ -21,8 +21,8 @@ function Row({ title, description, children }: { title: string; description?: Re
   return (
     <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="min-w-0">
-        <p className="text-[13.5px] font-medium">{title}</p>
-        {description && <p className="mt-0.5 text-[12.5px] text-muted-foreground">{description}</p>}
+        <p className="text-[15px] font-medium">{title}</p>
+        {description && <p className="mt-0.5 text-[14px] text-muted-foreground">{description}</p>}
       </div>
       <div className="shrink-0">{children}</div>
     </div>
@@ -70,7 +70,7 @@ function ConfirmDialog({ open, onOpenChange, title, description, word, action, o
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-1.5">
-          <p className="text-[13px]">
+          <p className="text-[14.5px]">
             {t("Type {word} to confirm.", { word })}
           </p>
           <Input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus aria-label={t("Confirmation")} />
@@ -153,7 +153,7 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title={t("Settings")} description={t("Everything here is in your control.")} />
-      <nav className="mb-6 flex flex-wrap gap-1.5 text-[12px]">
+      <nav className="mb-6 flex flex-wrap gap-1.5 text-[13.5px]">
         {[
           ["profile", t("Profile")],
           ["language", t("Language")],
@@ -178,14 +178,14 @@ export default function SettingsPage() {
                 if (await data.saveProfile({ full_name: name.trim() || null })) toast.success(t("Profile saved"));
               }}
             >
-              <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 w-48 text-[13px]" maxLength={60} aria-label={t("Display name")} />
+              <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 w-48 text-[14.5px]" maxLength={60} aria-label={t("Display name")} />
               <Button size="sm" variant="outline" type="submit" disabled={name === (profile.full_name ?? "")}>
                 {t("Save")}
               </Button>
             </form>
           </Row>
           <Row title={t("Email")} description={mode === "demo" ? t("Demo accounts don't have an email.") : t("Your sign-in email.")}>
-            <span className="text-[13px] text-muted-foreground">{mode === "demo" ? "—" : profile.email}</span>
+            <span className="text-[14.5px] text-muted-foreground">{mode === "demo" ? "—" : profile.email}</span>
           </Row>
         </Section>
 
@@ -285,13 +285,13 @@ export default function SettingsPage() {
           </Row>
           <Row title={t("Quiet hours")} description={t("No pop-ups or sounds during this window. Reminders wait in the bell menu.")}>
             <div className="flex items-center gap-2">
-              <Input type="time" value={p.quiet_hours_start} disabled={!p.quiet_hours_enabled} onChange={(e) => e.target.value && save({ quiet_hours_start: e.target.value })} className="h-8 w-28 text-[13px]" aria-label={t("Quiet hours start")} />
+              <Input type="time" value={p.quiet_hours_start} disabled={!p.quiet_hours_enabled} onChange={(e) => e.target.value && save({ quiet_hours_start: e.target.value })} className="h-8 w-28 text-[14.5px]" aria-label={t("Quiet hours start")} />
               <span className="text-muted-foreground">–</span>
-              <Input type="time" value={p.quiet_hours_end} disabled={!p.quiet_hours_enabled} onChange={(e) => e.target.value && save({ quiet_hours_end: e.target.value })} className="h-8 w-28 text-[13px]" aria-label={t("Quiet hours end")} />
+              <Input type="time" value={p.quiet_hours_end} disabled={!p.quiet_hours_enabled} onChange={(e) => e.target.value && save({ quiet_hours_end: e.target.value })} className="h-8 w-28 text-[14.5px]" aria-label={t("Quiet hours end")} />
               <Switch checked={p.quiet_hours_enabled} onCheckedChange={(v) => save({ quiet_hours_enabled: v })} aria-label={t("Quiet hours")} />
             </div>
           </Row>
-          <p className="pt-3 text-[12px] text-muted-foreground">{t("Repeat frequency is set per reminder (daily, weekdays, weekly, monthly) when you create or edit it.")}</p>
+          <p className="pt-3 text-[13.5px] text-muted-foreground">{t("Repeat frequency is set per reminder (daily, weekdays, weekly, monthly) when you create or edit it.")}</p>
         </Section>
 
         <Section id="privacy" icon={ShieldCheck} title={t("AI & privacy")}>
@@ -299,12 +299,12 @@ export default function SettingsPage() {
             <Switch checked={p.daily_overview_enabled} onCheckedChange={(v) => save({ daily_overview_enabled: v })} aria-label={t("AI daily overview")} />
           </Row>
           <Row title={t("AI engine")} description={ai.configured ? t("OpenAI ({model}) — configured by the server.", { model: ai.model ?? "" }) : t("Simulated: no OpenAI key is configured, so a built-in rule-based parser runs on the server. Results are labeled “Simulated AI”.")}>
-            <span className={cn("rounded-md px-2 py-1 text-[12px] font-medium", ai.configured ? "bg-success/12 text-[oklch(0.45_0.12_155)]" : "bg-warning/15 text-[oklch(0.5_0.13_60)]")}>{ai.configured ? t("Live") : t("Demo")}</span>
+            <span className={cn("rounded-md px-2 py-1 text-[13.5px] font-medium", ai.configured ? "bg-success/12 text-[oklch(0.45_0.12_155)]" : "bg-warning/15 text-[oklch(0.5_0.13_60)]")}>{ai.configured ? t("Live") : t("Demo")}</span>
           </Row>
-          <div className="grid gap-2 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+          <div className="grid gap-2 py-3 text-[14px] leading-relaxed text-muted-foreground">
             <p className="flex gap-2">
               <Lock className="mt-0.5 size-3.5 shrink-0 text-primary" />
-              {t("AI never saves anything on its own. Every task, reminder, idea, note and event from Quick capture waits for your approval.")}
+              {t("AI saves and organizes what you say right away. Every change can be undone, and you can edit or delete anything.")}
             </p>
             <p className="flex gap-2">
               <KeyRound className="mt-0.5 size-3.5 shrink-0 text-primary" />
@@ -340,7 +340,7 @@ export default function SettingsPage() {
               </Select>
               <Input
                 defaultValue={c.name}
-                className="h-8 flex-1 text-[13px]"
+                className="h-8 flex-1 text-[14.5px]"
                 aria-label={t("Category name")}
                 onBlur={(e) => {
                   const v = e.target.value.trim();
@@ -354,12 +354,12 @@ export default function SettingsPage() {
             </div>
           ))}
           <form onSubmit={addCategory} className="flex gap-2 pt-3">
-            <Input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder={t("New category")} className="h-8 text-[13px]" maxLength={60} />
+            <Input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder={t("New category")} className="h-8 text-[14.5px]" maxLength={60} />
             <Button size="sm" variant="outline" type="submit" disabled={!newCat.trim()}>
               <Plus /> {t("Add")}
             </Button>
           </form>
-          <p className="pt-2 text-[11.5px] text-muted-foreground">{t("Deleting a category keeps its items — they just become uncategorized.")}</p>
+          <p className="pt-2 text-[13px] text-muted-foreground">{t("Deleting a category keeps its items — they just become uncategorized.")}</p>
         </Section>
 
         <Section id="data" icon={Download} title={t("Your data")} description={t("Take your data with you at any time.")}>

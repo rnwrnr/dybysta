@@ -13,7 +13,7 @@ function SelectTrigger({ className, children, size = "default", ...props }: Reac
     <SelectPrimitive.Trigger
       className={cn(
         "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-sm whitespace-nowrap shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:opacity-50 data-[placeholder]:text-muted-foreground [&_svg]:shrink-0 *:data-[slot=select-value]:truncate",
-        size === "sm" ? "h-8 text-[13px]" : "h-9",
+        size === "sm" ? "h-8 text-[14.5px]" : "h-9",
         className
       )}
       {...props}
@@ -46,7 +46,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
   return (
     <SelectPrimitive.Item
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-[13px] outline-none select-none focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-[14.5px] outline-none select-none focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
       {...props}

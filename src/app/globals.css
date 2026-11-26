@@ -4,29 +4,29 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.65rem;
-  --background: oklch(0.985 0.002 286);
-  --foreground: oklch(0.2 0.015 286);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.015 286);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.015 286);
-  --primary: oklch(0.53 0.22 293);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.965 0.005 286);
-  --secondary-foreground: oklch(0.25 0.015 286);
-  --muted: oklch(0.965 0.004 286);
-  --muted-foreground: oklch(0.5 0.016 286);
-  --accent: oklch(0.955 0.025 293);
-  --accent-foreground: oklch(0.38 0.17 293);
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.6 0.14 155);
-  --warning: oklch(0.72 0.15 70);
-  --border: oklch(0.92 0.005 286);
-  --input: oklch(0.91 0.006 286);
-  --ring: oklch(0.6 0.2 293);
-  --sidebar: oklch(0.975 0.003 286);
+  --radius: 0.75rem;
+  --background: #fbf8f3;
+  --foreground: #2a2420;
+  --card: #ffffff;
+  --card-foreground: #2a2420;
+  --popover: #ffffff;
+  --popover-foreground: #2a2420;
+  --primary: #a0804f;
+  --primary-foreground: #ffffff;
+  --secondary: #f3ece1;
+  --secondary-foreground: #3a3028;
+  --muted: #f4eee5;
+  --muted-foreground: #74685c;
+  --accent: #f3ebdd;
+  --accent-foreground: #6b5233;
+  --destructive: oklch(0.56 0.2 27);
+  --destructive-foreground: #ffffff;
+  --success: oklch(0.58 0.12 155);
+  --warning: oklch(0.7 0.14 70);
+  --border: #ebe3d6;
+  --input: #e4dacb;
+  --ring: #c8a97e;
+  --sidebar: #f6f0e6;
 }
 
 @theme inline {
@@ -52,6 +52,15 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
+  --color-sand-50: #faf6ef;
+  --color-sand-100: #f3ebdd;
+  --color-sand-200: #e8dac2;
+  --color-sand-300: #d9c3a0;
+  --color-sand-400: #c8a97e;
+  --color-sand-500: #b48f62;
+  --color-sand-600: #9a774f;
+  --color-sand-700: #7d5f40;
+  --color-sand-800: #614a33;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -63,6 +72,9 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  html {
+    font-size: 106.25%; /* 17px base for better readability */
   }
   body {
     @apply bg-background text-foreground antialiased;

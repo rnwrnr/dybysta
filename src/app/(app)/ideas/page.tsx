@@ -16,7 +16,7 @@ import type { Idea, IdeaStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLE: Record<IdeaStatus, { label: string; cls: string }> = {
-  new: { label: "New", cls: "bg-violet-50 text-violet-700" },
+  new: { label: "New", cls: "bg-sand-50 text-sand-700" },
   exploring: { label: "Exploring", cls: "bg-blue-50 text-blue-700" },
   converted: { label: "Converted", cls: "bg-emerald-50 text-emerald-700" },
   archived: { label: "Archived", cls: "bg-muted text-muted-foreground" },
@@ -39,7 +39,7 @@ function IdeaCard({ idea, onTag }: { idea: Idea; onTag: (t: string) => void }) {
   return (
     <div className="group flex flex-col rounded-xl border bg-card p-4 transition-all hover:border-primary/25 hover:shadow-sm">
       <div className="mb-2 flex items-start justify-between gap-2">
-        <span className={cn("rounded px-1.5 py-0.5 text-[10.5px] font-medium", STATUS_STYLE[idea.status].cls)}>{t(STATUS_STYLE[idea.status].label)}</span>
+        <span className={cn("rounded px-1.5 py-0.5 text-[12px] font-medium", STATUS_STYLE[idea.status].cls)}>{t(STATUS_STYLE[idea.status].label)}</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon-xs" className="-mt-1 -mr-1" aria-label={t("Idea actions")}>
@@ -71,18 +71,18 @@ function IdeaCard({ idea, onTag }: { idea: Idea; onTag: (t: string) => void }) {
       </div>
       <button className="flex-1 text-left" onClick={() => open({ type: "idea", editing: idea })}>
         <p className="font-medium leading-snug">{idea.title}</p>
-        {idea.description && <p className="mt-1.5 line-clamp-4 text-[13px] leading-relaxed text-muted-foreground">{idea.description}</p>}
+        {idea.description && <p className="mt-1.5 line-clamp-4 text-[14.5px] leading-relaxed text-muted-foreground">{idea.description}</p>}
       </button>
       {idea.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
           {idea.tags.map((tag) => (
-            <button key={tag} onClick={() => onTag(tag)} className="rounded bg-accent px-1.5 py-0.5 text-[11px] text-accent-foreground hover:bg-accent/70">
+            <button key={tag} onClick={() => onTag(tag)} className="rounded bg-accent px-1.5 py-0.5 text-[12.5px] text-accent-foreground hover:bg-accent/70">
               #{tag}
             </button>
           ))}
         </div>
       )}
-      <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3 text-[11px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3 text-[12.5px] text-muted-foreground">
         <span className="flex items-center gap-2">
           {relativeDayLabel(new Date(idea.created_at))}
           <CategoryBadge id={idea.category_id} />
@@ -134,7 +134,7 @@ export default function IdeasPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[200px] flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search ideas…")} className="h-8 pl-8 text-[13px]" aria-label={t("Search ideas")} />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search ideas…")} className="h-8 pl-8 text-[14.5px]" aria-label={t("Search ideas")} />
         </div>
         <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
           <SelectTrigger size="sm" className="w-36" aria-label={t("Status filter")}>
@@ -153,14 +153,14 @@ export default function IdeasPage() {
       </div>
       {allTags.length > 0 && (
         <div className="mb-5 flex flex-wrap gap-1.5">
-          <button onClick={() => setTag(null)} className={cn("rounded-full border px-2.5 py-0.5 text-[12px]", !tag ? "border-primary/30 bg-accent text-accent-foreground" : "bg-card text-muted-foreground hover:text-foreground")}>
+          <button onClick={() => setTag(null)} className={cn("rounded-full border px-2.5 py-0.5 text-[13.5px]", !tag ? "border-primary/30 bg-accent text-accent-foreground" : "bg-card text-muted-foreground hover:text-foreground")}>
             {t("All tags")}
           </button>
           {allTags.map((tg) => (
             <button
               key={tg}
               onClick={() => setTag(tag === tg ? null : tg)}
-              className={cn("rounded-full border px-2.5 py-0.5 text-[12px]", tag === tg ? "border-primary/30 bg-accent text-accent-foreground" : "bg-card text-muted-foreground hover:text-foreground")}
+              className={cn("rounded-full border px-2.5 py-0.5 text-[13.5px]", tag === tg ? "border-primary/30 bg-accent text-accent-foreground" : "bg-card text-muted-foreground hover:text-foreground")}
             >
               #{tg}
             </button>

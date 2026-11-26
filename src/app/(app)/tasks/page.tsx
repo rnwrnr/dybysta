@@ -28,7 +28,7 @@ function Group({ title, tasks, tone, defaultOpen = true }: { title: string; task
   if (!tasks.length) return null;
   return (
     <section>
-      <button onClick={() => setOpen((o) => !o)} className="mb-1 flex items-center gap-1.5 px-2 text-[12px] font-semibold text-muted-foreground hover:text-foreground">
+      <button onClick={() => setOpen((o) => !o)} className="mb-1 flex items-center gap-1.5 px-2 text-[13.5px] font-semibold text-muted-foreground hover:text-foreground">
         <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90")} />
         <span className={tone}>{title}</span>
         <span className="font-normal">{tasks.length}</span>
@@ -123,14 +123,14 @@ function TasksPageInner() {
             <CategorySelect allLabel={t("All categories")} value={category} onChange={setCategory} size="sm" className="w-44" />
           </div>
           <CalendarView kinds={["task"]} categoryId={category} />
-          <p className="text-[12px] text-muted-foreground">{t("Tasks without a due date aren't shown in the calendar. Use + on a day to add one.")}</p>
+          <p className="text-[13.5px] text-muted-foreground">{t("Tasks without a due date aren't shown in the calendar. Use + on a day to add one.")}</p>
         </div>
       ) : (
         <>
           <div className="mb-5 flex flex-wrap items-center gap-2">
             <div className="relative min-w-[200px] flex-1">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search tasks…")} className="h-8 pl-8 text-[13px]" aria-label={t("Search tasks")} />
+              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search tasks…")} className="h-8 pl-8 text-[14.5px]" aria-label={t("Search tasks")} />
             </div>
             <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
               <SelectTrigger size="sm" className="w-32" aria-label={t("Status filter")}>

@@ -41,7 +41,7 @@ export default function CalendarPage() {
               key={tg.kind}
               onClick={() => toggle(tg.kind)}
               aria-pressed={active}
-              className={cn("inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[12.5px] font-medium transition-colors", active ? tg.on : "bg-card text-muted-foreground hover:text-foreground")}
+              className={cn("inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[14px] font-medium transition-colors", active ? tg.on : "bg-card text-muted-foreground hover:text-foreground")}
             >
               <tg.icon className="size-3.5" /> {t(tg.label)}
             </button>

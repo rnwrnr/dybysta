@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="absolute top-4 right-4">
         <LanguageSwitch />
       </div>
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-80 max-w-2xl rounded-full bg-gradient-to-b from-violet-200/50 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-80 max-w-2xl rounded-full bg-gradient-to-b from-sand-200/50 to-transparent blur-3xl" />
       <Link href="/" className="mb-8">
         <Logo />
       </Link>
