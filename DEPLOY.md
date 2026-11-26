@@ -8,7 +8,7 @@
 ## 2. (Recommended) Create a Supabase project for real accounts — 10 min
 Skip this for a pure demo: without Supabase every visitor gets a private demo stored in their own browser.
 1. https://supabase.com → **New project** (region: Frankfurt is closest to Kazakhstan).
-2. **SQL Editor** → run, in order: `supabase/migrations/0001_init.sql`, `0002_russian_ui.sql`, `0003_kazakh_voice.sql`.
+2. **SQL Editor** → **New query** → paste the whole contents of `supabase/setup.sql` → **Run**. (It is the three migrations combined.)
 3. **Project Settings → API**: copy the **Project URL** and the **anon public** key.
 4. **Authentication → URL Configuration**: set **Site URL** to your live URL (from step 3) and add `https://YOUR-DOMAIN/auth/callback` to **Redirect URLs**.
    For a quick launch you can turn off "Confirm email" in **Authentication → Providers → Email** so people can sign in immediately.
