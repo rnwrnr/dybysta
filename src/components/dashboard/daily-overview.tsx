@@ -4,11 +4,10 @@ import * as React from "react";
 import { RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SimulatedBadge } from "@/components/items/meta";
 import { buildContext } from "@/lib/ai/context";
 import { useData } from "@/lib/data/store";
 
-const CACHE_KEY = "dybysta:overview";
+const CACHE_KEY = "dybysta:overview:v2";
 
 /** Cheap fingerprint so the overview only regenerates when relevant data changes. */
 function signature(s: ReturnType<typeof useData>) {
@@ -84,7 +83,6 @@ export function DailyOverview() {
             <Sparkles className="size-3.5" />
           </span>
           <p className="text-sm font-semibold">{t("Your day at a glance")}</p>
-          {state?.simulated && <SimulatedBadge />}
         </div>
         <Button variant="ghost" size="icon-xs" onClick={() => generate(true)} disabled={loading} aria-label={t("Regenerate overview")}>
           <RefreshCw className={loading ? "animate-spin" : ""} />

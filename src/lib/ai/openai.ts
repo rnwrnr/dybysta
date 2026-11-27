@@ -211,24 +211,43 @@ export async function openaiOverview(ctx: AssistantContext, language: string): P
       return await overviewWith(model, ctx, language);
     } catch (e) {
       lastErr = e;
-      if (!isModelError(e)) break;
+      if (!isModelError(e) && !(e instanceof Error && e.message === "empty answer")) break;
     }
   }
   throw lastErr;
 }
 
+/** Reasoning models (e.g. gpt-oss on Groq) spend tokens thinking before they answer. */
+const isReasoningModel = (model: string) => /gpt-oss|qwen3|o\d|gpt-5/i.test(model);
+
 async function overviewWith(model: string, ctx: AssistantContext, language: string): Promise<string> {
+  const reasoning = isReasoningModel(model);
   const res = await getClient().chat.completions.create({
     model,
     temperature: 0.3,
-    max_tokens: 400,
+    // Leave room for the model's thinking, otherwise the answer comes back empty.
+    max_tokens: reasoning ? 2000 : 400,
+    ...(reasoning ? { reasoning_effort: "low" as const } : {}),
     messages: [
       {
         role: "system",
         content: `Write a warm, concise daily overview (2–4 sentences, no lists, no greeting) for the user based ONLY on their data. Today is ${ctx.now.date} (${ctx.weekday}), now ${ctx.now.time}. Mention what's due today, overdue items, the next event, and one suggested focus. Never invent anything. Reply in ${language === "ru" ? "Russian" : "English"}.`,
       },
-      { role: "user", content: JSON.stringify(ctx) },
+      { role: "user", content: JSON.stringify(overviewData(ctx)) },
     ],
   });
-  return res.choices[0]?.message?.content?.trim() || "";
+  const text = res.choices[0]?.message?.content?.trim() || "";
+  if (!text) throw new Error("empty answer");
+  return text;
+}
+
+/** Only what the overview needs: open tasks, upcoming reminders and events (keeps the request small). */
+function overviewData(ctx: AssistantContext) {
+  return {
+    now: ctx.now,
+    weekday: ctx.weekday,
+    tasks: ctx.tasks.filter((t) => t.status !== "done").slice(0, 60).map(({ title, due_date, due_time, priority }) => ({ title, due_date, due_time, priority })),
+    reminders: ctx.reminders.filter((r) => (r.status === "pending" || r.status === "snoozed") && r.at >= ctx.now.date).slice(0, 20).map(({ title, at }) => ({ title, at })),
+    events: ctx.events.filter((e) => e.date >= ctx.now.date).slice(0, 20).map(({ title, date, start_time }) => ({ title, date, start_time })),
+  };
 }
